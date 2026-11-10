@@ -16,6 +16,13 @@
   <img src="assets/screenshot-play.png" alt="Saqr — gameplay" width="820">
 </p>
 
+## More screenshots
+
+<table>
+<tr><td width="50%"><img src="assets/screenshot-flights.png" alt="The flights of the season"><br><sub>The flights of the season</sub></td><td width="50%"><img src="assets/screenshot-results.png" alt="A day's result"><br><sub>A day's result</sub></td></tr>
+<tr><td width="50%"><img src="assets/screenshot-how.png" alt="How to fly"><br><sub>How to fly</sub></td><td width="50%"><img src="assets/screenshot-pause.png" alt="On the glove"><br><sub>On the glove</sub></td></tr>
+</table>
+
 ## Controls
 
 | Keys | Action |
