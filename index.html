@@ -1,0 +1,1964 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Saqr</title>
+<!--
+  Saqr (`falcon`) — United Arab Emirates, falconry in the dunes.
+  Top-down desert. You DRAW the falcon's flight line with a drag; she follows it with momentum and climbs as she flies
+  ("waiting on"). HOLD to STOOP: she folds her wings and dives, the camera drops into her eye and the wind rises.
+  Height is speed: start the stoop at the right distance and she binds to the lure or the houbara. The twist: the
+  shamal — a gust arrives mid-flight, shown by blowing sand, and pushes her off her line.
+  Pure core (Core, between CORE-BEGIN and CORE-END) runs in Node: flight, wind, quarry and strike, with a self-test.
+  The falcon is never hurt; a caught houbara is ringed and let go. A miss means the quarry escapes.
+-->
+<style>
+  :root { --sand: #e3b768; --sand2: #d29a4a; --sky: #7fb8d8; --brown: #6b4423; --ink: #2b1a0c; --dim: #7a5a3a; --cream: #fbf2df; --cream2: #f3e3c2;
+          --sadu-r: #9b2d20; --sadu-k: #1d1310; --gold: #c9962e; --line: rgba(43,26,12,.18); --good: #3c7a3a; --bad: #a3271c;
+          --serif: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif; --sans: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  html, body { margin: 0; height: 100%; background: #2a1a0e; color: var(--ink); font: 15px/1.4 var(--sans); overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
+  #cv { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .scene { position: fixed; inset: 0; display: none; z-index: 4; }
+  .scene.on { display: block; }
+  .card { position: relative; background: color-mix(in srgb, var(--cream) 96%, transparent); border: 1px solid #8a6236; border-radius: 6px; box-shadow: 0 18px 50px rgba(30,15,4,.5); }
+  /* the Al Sadu band: Bedouin weaving, red, black and cream triangles, along the top of every card */
+  .card::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 9px; border-radius: 6px 6px 0 0;
+    background: linear-gradient(135deg, var(--sadu-k) 25%, transparent 25%) 0 0 / 14px 9px, linear-gradient(225deg, var(--sadu-k) 25%, transparent 25%) 0 0 / 14px 9px,
+                linear-gradient(90deg, var(--sadu-r) 50%, var(--cream) 50%) 0 0 / 14px 9px; }
+  button { font: inherit; color: inherit; }
+  .btn { font: 600 15px var(--sans); background: #fffaf0; color: var(--ink); border: 1.5px solid rgba(107,68,35,.4); border-radius: 6px; padding: 9px 14px; min-height: 44px; cursor: pointer; }
+  .btn:hover { border-color: var(--sadu-r); }
+  .btn:focus-visible, [role=menuitem]:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+  .btn.hot { background: var(--brown); color: #fff6e4; border-color: #3d250f; }
+  .btn small { display: block; font-weight: 400; font-size: 12px; opacity: .8; }
+  kbd { display: inline-block; min-width: 1.5em; padding: 1px 6px; border: 1px solid rgba(43,26,12,.4); border-bottom-width: 3px; border-radius: 5px; font: 700 12px ui-monospace, Consolas, monospace; text-align: center; background: #fffaf0; color: var(--ink); }
+  /* ── Title ── */
+  #sc-title .menu { position: absolute; box-sizing: border-box; left: max(12px, 4vw); top: max(14px, 5vh); width: min(460px, calc(100vw - 24px)); padding: 20px 20px 14px; }
+  .logo { font: 400 50px/1 var(--serif); letter-spacing: .32em; color: var(--brown); margin: 4px 0 0; text-transform: uppercase; }
+  .logo span { font-size: 26px; letter-spacing: 0; color: var(--sadu-r); margin-left: 4px; vertical-align: 10px; }
+  .sub { font: 600 11.5px var(--sans); letter-spacing: .26em; text-transform: uppercase; color: var(--dim); margin: 4px 0 8px; }
+  .greet { display: flex; gap: 10px; align-items: center; margin: 4px 0 10px; font-size: 14px; color: var(--dim); min-height: 52px; }
+  .greet canvas { border-radius: 50%; flex: none; background: #f0dcb4; }
+  .greet b { color: var(--ink); }
+  .greet small { display: block; }
+  #playBtn { width: 100%; text-align: left; font: 700 21px var(--serif); padding: 12px 16px; background: var(--brown); color: #fff6e4; border: 0; border-radius: 6px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.25); min-height: 58px; cursor: pointer; }
+  #playBtn small { display: block; font: 500 13px var(--sans); opacity: .9; margin-top: 2px; }
+  .row5 { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin-top: 8px; }
+  .row5 .btn { padding: 8px 4px; font-size: 13px; text-align: center; }
+  @media (max-width: 600px) { #board { top: 62px; max-width: calc(100vw - 100px); } .sub { letter-spacing: .14em; } }
+  @media (max-width: 480px) { .row5 { gap: 4px; } .row5 .btn { font-size: 11.5px; padding: 6px 2px; } .logo { font-size: 40px; } }
+  .wing { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); }
+  .wing canvas { flex: 1; min-width: 0; height: 54px; }
+  .controls { position: fixed; left: max(14px, 4vw); bottom: 12px; z-index: 5; padding: 12px 12px 9px; font-size: 12.5px; color: var(--dim); display: grid; gap: 4px; max-width: calc(100vw - 28px); }
+  .controls b { color: var(--ink); }
+  @media (max-height: 520px) { .controls { display: none !important; } #sc-title .menu { top: 8px; padding: 14px 14px 10px; } .logo { font-size: 34px; } .greet { min-height: 0; margin: 2px 0 6px; } .wing { display: none; } }
+  /* ── Panels ── */
+  .panel { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; padding: 20px 22px 18px; box-sizing: border-box; }
+  .panel h2 { font: 700 26px var(--serif); margin: 0 0 4px; color: var(--ink); }
+  .panel h2 small { display: block; font: 600 11.5px var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--sadu-r); }
+  .acts { display: grid; gap: 10px; margin-top: 8px; }
+  .act h3 { margin: 0 0 6px; font: 700 15px var(--serif); color: var(--brown); }
+  .grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+  @media (max-width: 700px) { .grid5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .mc { text-align: left; background: #fffaf0; border: 1.5px solid var(--line); border-radius: 6px; padding: 7px 8px; cursor: pointer; min-height: 84px; display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--dim); }
+  .mc b { color: var(--ink); font-size: 13px; }
+  .mc.done { border-color: var(--good); } .mc.done .st { color: var(--good); }
+  .mc.final { background: linear-gradient(180deg, #fffaf0, #f6e2bd); }
+  .mc[disabled] { opacity: .45; cursor: not-allowed; }
+  .mc.next { box-shadow: 0 0 0 2px var(--brown); }
+  .prow { display: flex; gap: 6px; align-items: stretch; }
+  .prow #playBtn { flex: 1; }
+  .rankb { flex: none; width: 96px; border-radius: 6px; background: #fffaf0; border: 1.5px solid var(--line); display: grid; place-content: center; text-align: center; padding: 4px; font: 600 11px var(--sans); color: var(--dim); }
+  .rankb b { display: block; color: var(--brown); font: 700 13px/1.15 var(--serif); }
+  .rankb i { font-style: normal; color: #b07d10; font-weight: 800; font-size: 13px; }
+  .mc .stars { color: #b07d10; letter-spacing: 1px; }
+  .mc .new { color: var(--sadu-r); font-size: 11px; }
+  .mc .goal { font-size: 11px; }
+  .rstars { font: 900 24px Arial, sans-serif; color: #b07d10; letter-spacing: 2px; }
+  .goal.ok { color: var(--good); }
+  .drills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .extras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 10px; }
+  .how { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .how canvas { width: 100%; height: 240px; border-radius: 6px; background: var(--sand); }
+  @media (max-width: 720px) { .how { grid-template-columns: 1fr; } }
+  .how li { margin: 4px 0; }
+  .gloss { font-size: 12.5px; color: var(--dim); margin-top: 8px; }
+  .set { display: grid; gap: 8px; margin-top: 10px; }
+  .set label { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fffaf0; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; min-height: 44px; box-sizing: border-box; }
+  .set input { width: 22px; height: 22px; accent-color: var(--brown); }
+  .back { position: fixed; right: 12px; top: 12px; z-index: 30; display: none; font: 800 13px var(--sans); letter-spacing: .12em; background: var(--ink); color: #fff6e4; border: 2px solid var(--sand); border-radius: 6px; padding: 8px 12px; min-height: 44px; min-width: 44px; cursor: pointer; }
+  .back.on { display: inline-flex; gap: 8px; align-items: center; }
+  .back kbd { background: #4a3018; color: #fff6e4; border-color: #9a7448; }
+  @media (hover: none) and (pointer: coarse) { .back kbd, .keys-only { display: none !important; } }
+  /* ── Results: the Majlis ── */
+  #sc-results .panel { width: min(1180px, 88vw); height: min(600px, calc(100vh - 24px)); display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 760px) { #sc-results .panel { width: calc(100vw - 16px); grid-template-columns: 1fr; height: auto; } }
+  .rbox { background: #fffaf0; border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow: auto; }
+  .rbtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .rline { margin: 7px 0; color: var(--dim); }
+  .rline b { color: var(--ink); }
+  .up { color: var(--good); font-weight: 800; }
+  .flights { display: flex; gap: 10px; margin: 8px 0; }
+  .flights span { flex: 1; text-align: center; padding: 8px 4px; border-radius: 6px; font: 700 13px var(--sans); background: #f3e3c2; color: var(--dim); }
+  .flights span.hit { background: #2f5d2c; color: #fff6e4; }
+  .flights span.miss { background: #e9d2c8; color: var(--bad); }
+  /* ── Play HUD ── */
+  .hud { position: fixed; inset: 0; pointer-events: none; z-index: 3; display: none; }
+  .hud.on { display: block; }
+  .hud > * { pointer-events: auto; }
+  #board { position: absolute; left: 10px; top: 10px; background: rgba(251,242,223,.94); border-radius: 6px; padding: 6px 10px; box-shadow: 0 4px 16px rgba(0,0,0,.28); font: 700 13px var(--sans); display: grid; gap: 3px; max-width: calc(100vw - 150px); }
+  #board .t { font: 700 14px var(--serif); color: var(--brown); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #board .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; color: var(--dim); font-weight: 600; font-size: 12px; }
+  #board .fl { display: inline-flex; gap: 3px; }
+  #board .fl i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1.5px solid var(--brown); box-sizing: border-box; }
+  #board .fl i.hit { background: var(--good); border-color: var(--good); }
+  #board .fl i.miss { background: var(--bad); border-color: var(--bad); }
+  #board .fl i.now { box-shadow: 0 0 0 2px var(--sky); }
+  @media (max-width: 600px) { #board { top: 62px; } }   /* on a phone (the earlier rule sat before #board and lost) */
+  #call { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); max-width: min(520px, calc(100vw - 380px)); background: rgba(43,26,12,.86); color: #fff6e4; border-radius: 6px; padding: 6px 12px; font-size: 14px; display: flex; gap: 8px; align-items: center; }
+  #call canvas { border-radius: 50%; flex: none; }
+  @media (max-width: 760px) { #call { top: auto; bottom: 120px; left: 8px; right: 8px; transform: none; max-width: none; font-size: 13px; } }
+  .it { position: relative; width: 50px; height: 50px; border-radius: 6px; background: rgba(251,242,223,.95); border: 1.5px solid var(--brown); cursor: pointer; padding: 0; display: grid; place-items: center; font: 700 11px var(--sans); }
+  #ctl { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 8px; align-items: flex-end; }
+  #stoopBtn { width: 112px; height: 112px; border-radius: 50%; border: 3px solid #fff6e4; background: radial-gradient(circle at 40% 35%, #8a5a30, var(--brown) 60%, #3d250f); color: #fff6e4; font: 800 17px var(--serif); letter-spacing: .1em; box-shadow: 0 8px 22px rgba(0,0,0,.4); cursor: pointer; touch-action: none; }
+  #stoopBtn small { display: block; font: 600 10px var(--sans); letter-spacing: .06em; opacity: .85; }
+  #stoopBtn.held { background: radial-gradient(circle at 40% 35%, #c46a3a, var(--sadu-r) 60%, #4a140e); transform: scale(.96); }
+  #tr { position: fixed; right: 10px; top: 10px; z-index: 6; display: flex; gap: 6px; align-items: center; }
+  #topBtns { display: none; gap: 6px; }
+  #topBtns.on { display: flex; }
+  #topBtns .it { width: auto; padding: 0 10px; height: 44px; font-size: 13px; }
+  #big { position: fixed; left: 50%; top: 32%; transform: translate(-50%, -50%) scale(.9); z-index: 7; pointer-events: none; text-align: center; font: 700 64px/1 var(--serif); letter-spacing: .14em; color: #fff6e4; text-shadow: 0 3px 0 var(--brown), 0 8px 30px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s, transform .2s; white-space: nowrap; }
+  #big small { display: block; font: 600 17px var(--sans); letter-spacing: .08em; margin-top: 8px; }
+  #big.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  @media (max-width: 600px) { #big { font-size: 42px; } }
+  #toast { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); z-index: 8; background: rgba(43,26,12,.92); color: #fff6e4; padding: 8px 14px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100vw - 40px); text-align: center; }
+  #toast.on { opacity: 1; }
+  #tip { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 9; width: min(420px, calc(100vw - 32px)); padding: 20px 18px 14px; display: none; box-sizing: border-box; }
+  #tip.on { display: block; }
+  #tip { top: auto; left: 12px; bottom: 72px; transform: none; width: min(380px, calc(100vw - 150px)); }
+  @media (max-width: 600px) { #tip { width: calc(100vw - 24px); bottom: 136px; } }
+  #tip p { margin: 4px 0 10px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (prefers-reduced-motion: reduce) { .sq * { transition: none !important; animation: none !important; } }
+  .rm * { transition: none !important; animation: none !important; }
+</style>
+</head>
+<body class="sq">
+<canvas id="cv" aria-hidden="true"></canvas>
+
+<div class="hud" id="hud">
+  <div id="board" aria-label="This flight"></div>
+  <div id="call" aria-live="polite"><span id="callFace"></span><span id="callTxt">Salaam.</span></div>
+  <div id="ctl"><button class="btn" id="stoopBtn" aria-label="Hold to stoop">STOOP<small>hold</small></button></div>
+</div>
+<div id="tr"><div id="topBtns"><button class="it" id="pauseBtn" title="Pause (P)">II</button></div></div>
+<div id="big" aria-hidden="true"></div>
+<div id="toast" role="status"></div>
+<div id="tip" class="card" role="dialog" aria-label="Tip"><p id="tipTxt"></p><button class="btn" id="tipSkip">Skip tips</button> <button class="btn hot" id="tipOk">Got it</button></div>
+<button class="back" id="back" aria-label="Back (Esc)">BACK <kbd>Esc</kbd></button>
+
+<section class="scene" id="sc-title" role="region" aria-labelledby="logo">
+  <div class="menu card">
+    <h1 class="logo" id="logo">Saqr<span lang="ar" dir="rtl">صقر</span></h1>
+    <div class="sub">Falconry · United Arab Emirates</div>
+    <div class="greet" id="greet"></div>
+    <div class="prow"><button id="playBtn">Play</button><div class="rankb" id="rankB" title="Your rank comes from the stars you have won"></div></div>
+    <div class="row5" id="row5" role="menu" aria-label="Main menu"></div>
+    <div class="wing"><span id="wingLbl">The wing</span><canvas id="wingCv" aria-label="Your falcon's wing: one feather per mission flown"></canvas></div>
+  </div>
+</section>
+<div class="controls card" id="controlsCard">
+  <div class="keys-only"><b>Drag</b> from the falcon to draw her flight line · drag again in the air to change it</div>
+  <div class="keys-only"><b>Hold</b> <kbd>Space</kbd> (or hold the mouse still) to <b>stoop</b> · <b>tap-then-hold</b> = steep stoop · let go to pull out</div>
+  <div class="touch-only" style="display:none"><b>Touch:</b> drag from the falcon to draw her line · hold <b>STOOP</b> to dive on the quarry</div>
+  <div class="keys-only"><kbd>Esc</kbd> back · <kbd>P</kbd> pause · <kbd>M</kbd> sound</div>
+</div>
+
+<section class="scene" id="sc-missions" role="dialog" aria-modal="true" aria-labelledby="mH">
+  <div class="panel card"><h2 id="mH"><small>Uncle Rashid's season</small>The Flights</h2><div class="acts" id="acts"></div><div class="extras" id="extras"></div><div class="drills" id="drills"></div></div>
+</section>
+<section class="scene" id="sc-how" role="dialog" aria-modal="true" aria-labelledby="hH">
+  <div class="panel card"><h2 id="hH"><small>Uncle Rashid explains</small>How to fly her</h2>
+    <div class="how"><div><ol>
+      <li><b>Draw her line.</b> Drag from the falcon on your glove across the sand. Let go and she is cast off: she follows the line, and at its end she circles (she <i>waits on</i>).</li>
+      <li><b>She climbs as she flies.</b> The longer she is up, the higher she is (the gold ring round her). Height is speed in the stoop.</li>
+      <li><b>Stoop.</b> Hold <span class="keys-only"><kbd>Space</kbd>, hold the mouse still, or </span>hold STOOP: she folds and dives the way she is heading, and bends a little toward the quarry. She strikes when she reaches the ground — start too far and she lands short; too close and she overshoots. Let go to pull out (she keeps her speed but loses the height).</li>
+      <li><b>Change the line in the air.</b> Drag again at any time and she turns onto the new line.</li>
+      <li><b>The shamal.</b> When sand starts to stream across the dunes, a gust is coming: it pushes her with the wind.</li>
+      <li><b>A mission is three flights.</b> Bind to the lure or the houbara the number of times the card asks.</li>
+      <li><b>Thermals</b> (from mission 2): shimmering rings of rising air. End her line inside one and she circles up three times as fast, past her usual ceiling, to 150. In the oasis they also give back her <b>stamina</b> (the green bar), which runs down as she flies.</li>
+      <li><b>The steep stoop</b> (from mission 6): <b>tap, then hold</b> (twice quickly). She falls almost straight down: start it right over the quarry. Too quick for a jinking houbara or a doubling hare. A slanting stoop (just hold) carries far.</li>
+      <li><b>The tail chase</b> (from mission 11): low (under 35), close behind the quarry and heading at it, hold: she runs it down on the level for a moment.</li>
+      <li><b>The quarry thinks.</b> The houbara jinks as she closes; pigeons fly in a flock that confuses her (take the <b>straggler</b>, the bird trailing behind); the hare <b>doubles back</b> under a slanting stoop. From mission 8 they read you: two slanting stoops and they watch for the next; two steep ones and they watch the sky. Mix them.</li>
+      <li><b>Two falcons</b> (from mission 12): Hurra flies with yours, waits on the far side and stoops at the quarry. She never binds; she puts it in. Bind within a moment of her stoop for a <b>one-two</b> (a bigger ring).</li>
+      <li><b>Stars.</b> ★ the day · ★★ all three bound · ★★★ that plus the card's named moves, nothing lost. They make your rank.</li>
+    </ol>
+    <p class="gloss"><b>Saqr</b> — a falcon · <b>telwah</b> — the lure, swung on a line · <b>habara</b> — the houbara bustard · <b>burqa</b> — the hood · <b>mangalah</b> — the glove · <b>shamal</b> — the north wind · <b>majlis</b> — the evening sitting where the day's flights are told.</p>
+    </div><canvas id="howCv" aria-label="A falcon following her line, then stooping on the lure"></canvas></div>
+  </div>
+</section>
+<section class="scene" id="sc-settings" role="dialog" aria-modal="true" aria-labelledby="sH">
+  <div class="panel card" style="width:min(520px,calc(100vw - 24px))"><h2 id="sH"><small>The tent</small>Settings</h2><div class="set" id="setList"></div></div>
+</section>
+<section class="scene" id="sc-pause" role="dialog" aria-modal="true" aria-labelledby="pH">
+  <div class="panel card" style="width:min(420px,calc(100vw - 24px))"><h2 id="pH"><small>She is on the glove</small>Paused</h2><div class="set" id="pauseList"></div></div>
+</section>
+<section class="scene" id="sc-results" role="dialog" aria-modal="true" aria-labelledby="rH">
+  <div class="panel card">
+    <div class="rbox"><h2 id="rH"><small id="rKick">The Majlis</small><span id="rTitle">A good day</span></h2><p class="rline" id="rWhy"></p></div>
+    <div class="rbox"><div class="flights" id="rFlights"></div><div id="rStats"></div><canvas id="rFeather" width="120" height="160" style="width:72px;height:96px;float:right"></canvas><p class="rline" id="rVoice"></p><div class="rbtns" id="rBtns"></div></div>
+  </div>
+</section>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+(function () {
+  'use strict';
+  var GAME_ID = 'falcon';
+/*CORE-BEGIN*/
+/* Saqr — the pure core: the falcon's flight on a drawn line, the climb, the stoop, the wind and the shamal gusts,
+   the lure and the houbara, and the strike. No DOM, no clock, no Math.random: the same seed gives the same flight
+   in the page and in Node. Units: the field is 1000 × 640 "metres" (screen-ish), y runs down, the falconer stands
+   at the bottom middle. Altitude is in the same units. */
+var Core = (function () {
+  'use strict';
+  var FW = 1000, FH = 640, GLOVE = { x: 500, y: 588 };
+  var V = 150, TURN = 2.4, CLIMB = 8, STOOP_MIN = 35, ALT_MAX = 110, ALT0 = 6, WP_R = 22;
+  var DIVE = 70, SMAX = 400, KSP = 2.2, TURN_STOOP = 2.0, CONE = 1.3, PULL = 140;
+  // Advanced (2026-10-29): thermals lift her past the ceiling; the steep stoop falls almost straight down; the tail chase runs it down on the level
+  var ALT_HI = 150, TH_CLIMB = 3.2, STEEP_K = 1.9, STEEP_H = 0.38, CHASE_V = 235, CHASE_T = 1.8, ONE_TWO = 1.8;
+  var TAU = Math.PI * 2;
+
+  function rnd(o) { var a = o.rs | 0; a = a + 0x6D2B79F5 | 0; o.rs = a; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+  function hash(s) { var h = 2166136261; s = String(s); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function adiff(a, b) { var d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; }
+  function dist(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx * dx + dy * dy); }
+
+  // ── The season: 3 acts × 5 missions (a mission is three flights) ──
+  // name, quarry per flight (l = lure, t = telwah far out, h = houbara), need, houbara speed, gusts, gust power, palms, time limit, base wind [x, y], lure swing
+  var MS = [
+    ['First Flight', 'lll', 2, 0, 0, 0, 0, 30, [6, 0], 0.8],
+    ['Ring Up', 'lll', 2, 0, 0, 0, 0, 30, [10, 4], 1.0],
+    ['First Shamal', 'lll', 2, 0, 1, 55, 0, 30, [8, 0], 1.0],
+    ['The Habara', 'lhh', 2, 36, 0, 0, 0, 30, [8, 2], 1.0],
+    ['Liwa at Dawn', 'hhh', 2, 42, 1, 60, 0, 30, [10, 0], 1.1],
+    ['Date Palms', 'hhh', 2, 42, 0, 0, 5, 30, [6, 4], 1.0],
+    ['The Falaj', 'hhh', 2, 46, 1, 60, 6, 30, [10, -4], 1.0],
+    ['Under the Fronds', 'hhh', 2, 48, 1, 65, 8, 28, [8, 6], 1.0],
+    ['Afternoon Shamal', 'hhh', 2, 46, 2, 80, 5, 28, [14, 0], 1.0],
+    ['The Oasis Cup', 'hhh', 2, 48, 1, 70, 6, 28, [10, 4], 1.0],
+    ['The Telwah Race', 'ttt', 2, 0, 1, 60, 0, 15, [10, 0], 1.3],
+    ['Dusk Habara', 'hhh', 2, 52, 1, 70, 0, 24, [12, 2], 1.0],
+    ['Sandstorm Run', 'hhh', 2, 50, 3, 90, 0, 24, [16, 0], 1.0],
+    ['Semi-final', 'thh', 2, 52, 2, 75, 3, 22, [12, -4], 1.3],
+    ['The Golden Hood', 'hhh', 2, 56, 2, 85, 0, 22, [14, 4], 1.0],
+    ['Night Shamal', 'hhh', 3, 60, 3, 100, 0, 22, [18, 0], 1.0],   // 16: the top tier, after the season
+  ];
+  // th = thermals · stam = stamina (act 2 on) · shift = the wind turns mid-flight · partner = a second falcon (act 3) · q = new quarry
+  // (p = a flock of pigeons, r = a hare) · adapt = the quarry reads your stoops · news = what the card says is new
+  var MX = [null, {}, { th: 1, news: '' }, { th: 1 }, { th: 1 }, { th: 2 },
+    { th: 2, stam: 1, news: 'Stamina: she tires as she flies, thermals give it back. The steep stoop opens.' },
+    { th: 2, stam: 1, shift: 1, q: 'hph', news: 'Pigeons: a flock confuses her. Pick out the straggler.' },
+    { th: 2, stam: 1, adapt: 1, q: 'php', news: 'The quarry reads your stoops: repeat one and it is ready for it.' },
+    { th: 2, stam: 1, shift: 1, adapt: 1, q: 'pph', news: 'The wind turns mid-flight, and two gusts on top.' },
+    { th: 2, stam: 1, shift: 1, adapt: 1, q: 'hph', news: 'Final: palms, pigeons and a turning wind.' },
+    { th: 0, stam: 1, adapt: 1, news: 'The tail chase opens: low behind the quarry, hold to run it down.' },
+    { th: 2, stam: 1, adapt: 1, partner: 1, q: 'hrh', news: 'Two falcons: Hurra flies with yours. Bind right after her stoop for a one-two. The hare doubles back.' },
+    { th: 2, stam: 1, adapt: 1, partner: 1, q: 'rhr', news: 'Sandstorm hares: they double back under a slanting stoop.' },
+    { th: 2, stam: 1, shift: 1, adapt: 1, partner: 1, q: 'trh', news: 'Semi-final: the telwah race, then a hare and a houbara with Hurra.' },
+    { th: 2, stam: 1, shift: 1, adapt: 1, partner: 1, q: 'rhp', news: 'Final: hare, houbara and pigeons, both falcons, a turning wind.' },
+    { th: 2, stam: 1, shift: 1, adapt: 1, partner: 1, q: 'rpr', news: 'Night Shamal: everything, in the dark wind.' }];
+  // ★★ = all three bound with no Recall · ★★★ = ★★ plus the named moves and nothing used, nothing lost
+  var GOALS = [null, [['dead', 1]], [['thermal', 1]], [['shamal', 1]], [['thermal', 2]], [['towering', 1]],
+    [['steep', 1]], [['straggler', 1]], [['steep', 2]], [['tower120', 1]], [['names', 3]],
+    [['chase', 1]], [['oneTwo', 1]], [['double', 1]], [['chase', 2]], [['oneTwo', 1], ['steep', 1]], [['tower120', 1], ['double', 1]]];
+  var GOAL_NAME = { dead: 'Dead centre', thermal: 'thermal ride', shamal: 'bind through the shamal', towering: 'Towering stoop (90+)', steep: 'steep-stoop bind', straggler: 'pigeon straggler',
+    tower120: 'stoop from 120+ (a thermal)', names: 'different named binds', chase: 'tail-chase bind', oneTwo: 'one-two with Hurra', double: 'hare bound after it doubled back' };
+  var RANKS = [[0, 'Mubtadi · beginner'], [12, 'Falconer'], [24, 'Hunter'], [36, 'Master'], [45, 'Saqqar']];
+  function mission(n) {
+    var m = MS[clamp(n | 0, 1, 16) - 1], N = clamp(n | 0, 1, 16), x = MX[N] || {};
+    return { n: n, name: m[0], quarry: x.q || m[1], need: m[2], hSpeed: m[3] || (x.q ? 50 : 0), gusts: m[4], gustPow: m[5], palms: m[6], limit: m[7], wind: { x: m[8][0], y: m[8][1] }, lureW: m[9], act: Math.min(3, Math.floor((clamp(n, 1, 16) - 1) / 5) + 1), flights: 3, ease: n <= 5 ? 1.3 : n <= 10 ? 1.2 : 1.1,
+      th: x.th || 0, stam: !!x.stam, shift: !!x.shift, partner: !!x.partner, adapt: !!x.adapt, news: x.news || '', goal: GOALS[N],
+      tech: { thermal: N >= 2, steep: N >= 6, chase: N >= 11 } };
+  }
+
+  // ── A flight ──
+  /** spec: from mission(n) (or a free one); k: the flight's index 0–2; seed: an unsigned int. */
+  function newFlight(spec, k, seed, hab) {
+    var o = { rs: (seed ^ hash('flight' + k)) | 0 }, kind = spec.quarry.charAt(k % spec.quarry.length) || 'l', q;
+    if (kind === 'h' || kind === 'r') {
+      q = { kind: kind, x: 280 + rnd(o) * 440, y: 130 + rnd(o) * 200, h: -Math.PI / 2 + (rnd(o) - 0.5) * 2, sp: spec.hSpeed, run: false, jink: 1 + rnd(o) * 1.4, panic: 0, hidden: false, hideT: 0, rs: (seed * 31 + k * 977) | 0 };
+      if (kind === 'r') { q.sp = Math.max(48, spec.hSpeed) * 1.12; q.dbl = 0; q.dblCool = 0; q.doubled = false; q.burst = 0; }
+    } else if (kind === 'p') {   // a flock of pigeons wheeling over the sand; bird 0 is the straggler
+      q = { kind: 'p', x: 0, y: 0, cx: 380 + rnd(o) * 240, cy: 200 + rnd(o) * 100, R: 120 + rnd(o) * 40, ang: rnd(o) * TAU, w: 0.45, t: 0, burst: 0, tight: 0, birds: [], rs: (seed * 37 + k * 131) | 0 };
+      for (var b = 0; b < 7; b++) q.birds.push({ ox: b ? (rnd(o) - 0.5) * 50 : -62, oy: b ? (rnd(o) - 0.5) * 40 : 26, x: 0, y: 0 });
+      pigeonPos(q);
+    } else {
+      var far = kind === 't';
+      q = { kind: 'l', x: 0, y: 0, cx: far ? 300 + rnd(o) * 400 : 380 + rnd(o) * 240, cy: far ? 90 + rnd(o) * 50 : (spec.n >= 2 ? 170 : 230) + rnd(o) * 60, rx: far ? 50 : 70, ry: far ? 40 : 55, w: spec.lureW, ph: rnd(o) * TAU, t: 0, rs: 1 };
+      lurePos(q);
+    }
+    var palms = [];
+    for (var i = 0; i < spec.palms; i++) palms.push({ x: Math.round(150 + rnd(o) * 700), y: Math.round(90 + rnd(o) * 330), r: 30 + Math.round(rnd(o) * 10) });
+    var gusts = [];
+    for (i = 0; i < spec.gusts; i++) {
+      var a = (rnd(o) - 0.5) * 2.2 + (rnd(o) < 0.5 ? 0 : Math.PI);
+      gusts.push({ t0: Math.round((3 + i * 5 + rnd(o) * 3) * 10) / 10, dur: 3.2 + Math.round(rnd(o) * 15) / 10, x: Math.round(Math.cos(a) * spec.gustPow), y: Math.round(Math.sin(a) * spec.gustPow * 0.6) });
+    }
+    var F = { spec: spec, k: k, seed: seed, t: 0, cast: false, castT: 0, over: false, result: null, why: '', path: [],
+      f: { x: GLOVE.x, y: GLOVE.y - 18, h: -Math.PI / 2, s: 0, alt: ALT0, mode: 'glove', alt0: 0, pi: 0, wait: false, reprieves: 0, steep: false, chased: false, chaseT: 0, inTh: false },
+      q: q, palms: palms, gusts: gusts, wind: { x: spec.wind.x, y: spec.wind.y }, limit: spec.limit, strike: null };
+    // advanced extras, from their own stream so the older flights stay exactly as they were
+    var o2 = { rs: (seed ^ hash('adv' + k)) | 0 };
+    F.thermals = []; F.thT = 0; F.thRides = 0; F.thRiding = false;
+    for (i = 0; i < (spec.th || 0); i++) F.thermals.push({ x: Math.round(200 + rnd(o2) * 600), y: Math.round(170 + rnd(o2) * 260), r: 72 + Math.round(rnd(o2) * 14) });
+    F.stam = spec.stam ? 100 : null; if (spec.stam) F.limit = spec.limit * 2;   // with stamina the clock is a backstop: she tires when the bar runs out
+    F.shift = spec.shift ? { t: Math.round((7 + rnd(o2) * 5) * 10) / 10, ang: (rnd(o2) < 0.5 ? -1 : 1) * (1.6 + rnd(o2) * 0.8) } : null;
+    F.hab = hab || { slant: 0, steep: 0 };
+    F.p = spec.partner ? { x: GLOVE.x + 70, y: GLOVE.y - 10, h: -Math.PI / 2, alt: ALT0, s: 0, mode: 'glove', cool: 4 + rnd(o2) * 2, st: 0, last: -9, side: rnd(o2) < 0.5 ? -1 : 1, rs: (seed ^ 0x51ED27) | 0 } : null;
+    F.oneTwoT = -9;
+    return F;
+  }
+  function pigeonPos(q) {
+    var a = q.ang + q.w * q.t, cx = q.cx + q.R * Math.cos(a), cy = q.cy + q.R * 0.6 * Math.sin(a), hd = Math.atan2(0.6 * Math.cos(a), -Math.sin(a));
+    var sc = 1 + 1.1 * Math.sin(Math.PI * clamp(q.burst, 0, 1)), ch = Math.cos(hd), sh = Math.sin(hd);
+    for (var i = 0; i < q.birds.length; i++) {
+      var B = q.birds[i], ox = B.ox, oy = B.oy;
+      if (i === 0) { var tg = q.tight > 0 ? 0.35 : 1; ox = B.ox * tg + Math.sin(q.t * 0.9) * 10; oy = B.oy * tg; }
+      ox *= sc; oy *= sc;
+      B.x = cx + ox * ch - oy * sh; B.y = cy + ox * sh + oy * ch;
+    }
+    q.x = q.birds[0].x; q.y = q.birds[0].y; q.h = hd;
+  }
+  function lurePos(q) {
+    var a = q.ph + q.w * q.t;
+    q.x = q.cx + q.rx * Math.sin(a); q.y = q.cy + q.ry * Math.sin(2 * a) * 0.5;
+  }
+  /** The wind now: the base breeze plus any gust, ramped in and out. g = 0..1 how much gust. */
+  function windAt(F, t) {
+    var x = F.wind.x, y = F.wind.y, g = 0;
+    if (F.shift && t > F.shift.t) { var u0 = Math.min(1, (t - F.shift.t) / 1.5) * F.shift.ang, c0 = Math.cos(u0), s0 = Math.sin(u0), x0 = x * 1.3; x = x0 * c0 - y * s0; y = x0 * s0 + y * c0; }   // the wind turns (act 2 on)
+    for (var i = 0; i < F.gusts.length; i++) {
+      var G = F.gusts[i], u = t - G.t0;
+      if (u < 0 || u > G.dur) continue;
+      var r = Math.min(1, u / 0.6, (G.dur - u) / 0.8);
+      x += G.x * r; y += G.y * r; g = Math.max(g, r);
+    }
+    return { x: x, y: y, g: g };
+  }
+  /** The next gust's warning: seconds until it starts (≤ 2), or -1. */
+  function shiftSoon(F) { if (!F.shift) return -1; var u = F.shift.t - F.t; return u > 0 && u <= 2 ? u : -1; }
+  /** The thermal she is in (or null). */
+  function thermalAt(F, p) { for (var i = 0; i < (F.thermals || []).length; i++) if (dist(F.thermals[i], p) < F.thermals[i].r) return F.thermals[i]; return null; }
+  function nearThermal(F, p, pad) { for (var i = 0; i < (F.thermals || []).length; i++) if (dist(F.thermals[i], p) < F.thermals[i].r + pad) return F.thermals[i]; return null; }
+  /** A steep stoop's carry along the ground from this height (she falls nearly straight down). */
+  function reachSteep(alt) {
+    var a = alt, sp = V, d = 0, dt = 1 / 120;
+    while (a > 0) { a -= DIVE * STEEP_K * dt; sp = Math.min(SMAX, V + KSP * 1.4 * (alt - a)); d += sp * STEEP_H * dt; }
+    return d;
+  }
+  /** The habit the quarry has read: two of your last three stoops of one kind (act 2 on, adapt). */
+  function habitOf(h) { return !h ? null : h.slant >= 2 ? 'slant' : h.steep >= 2 ? 'steep' : null; }
+  function gustSoon(F) { for (var i = 0; i < F.gusts.length; i++) { var u = F.gusts[i].t0 - F.t; if (u > 0 && u <= 2) return u; } return -1; }
+
+  /** Set (or change) her line. pts: [{x, y}…] in field units. Casts her off the glove the first time. */
+  function setPath(F, pts) {
+    var out = [], last = null;
+    for (var i = 0; i < pts.length; i++) {
+      var p = { x: clamp(pts[i].x, -20, FW + 20), y: clamp(pts[i].y, -20, FH + 20) };
+      if (!last || dist(p, last) >= 16) { out.push(p); last = p; }
+    }
+    if (!out.length) return false;
+    F.path = out; F.f.pi = 0; F.f.wait = false;
+    if (F.f.mode === 'glove') { F.f.mode = 'fly'; F.f.s = V * 0.8; F.cast = true; F.castT = F.t; var d = out[0]; F.f.h = Math.atan2(d.y - F.f.y, d.x - F.f.x); return 'cast'; }
+    return true;
+  }
+  function strikeR(alt0, kind, ease) { return (18 + alt0 * 0.14 + (kind === 'l' ? 6 : 0)) * (ease || 1); }
+  /** How far a straight stoop from this height carries her along the ground (for a read, and for the dev bot). */
+  function reach(alt, s) {
+    var a = alt, sp = s || V, d = 0, dt = 1 / 120;
+    while (a > 0) { a -= DIVE * dt; sp = Math.min(SMAX, V + KSP * (alt - a)); d += sp * dt; }
+    return d;
+  }
+
+  /** One fixed step. inp: {stoop: bool, steep: bool (a double-tap stoop), slow: 0..1 (the whistle: the quarry's pace), climb: × (qahwa)}. Returns the events. */
+  function step(F, dt, inp) {
+    var ev = [], f = F.f, q = F.q, sp = inp && inp.slow != null ? inp.slow : 1, tech = F.spec.tech || {};
+    if (F.over) return ev;
+    F.t += dt;
+    var W = windAt(F, F.t);
+    // the quarry
+    stepQuarry(F, dt, sp, ev);
+    if (F.p) stepPartner(F, dt, ev);
+    if (f.mode === 'glove') return ev;
+    // the falcon
+    var aq0 = Math.atan2(q.y - f.y, q.x - f.x);
+    if (f.mode === 'fly' && inp && inp.stoop && f.alt >= STOOP_MIN) {
+      f.mode = 'stoop'; f.alt0 = f.alt; f.steep = !!(inp.steep && tech.steep); ev.push({ k: 'stoop', alt: f.alt, steep: f.steep });
+      if (F.stam != null) F.stam -= 5;
+      if (F.spec.adapt) { if (f.steep) { F.hab.steep++; F.hab.slant = Math.max(0, F.hab.slant - 1); } else { F.hab.slant++; F.hab.steep = Math.max(0, F.hab.steep - 1); } }
+    }
+    else if (f.mode === 'fly' && inp && inp.stoop && f.alt < STOOP_MIN && tech.chase && !f.chased && !q.hidden && dist(f, q) < 130 && Math.abs(adiff(aq0, f.h)) < 1.2) {
+      f.mode = 'chase'; f.chased = true; f.chaseT = CHASE_T; f.s = Math.max(f.s, CHASE_V); ev.push({ k: 'chase' }); if (F.stam != null) F.stam -= 8;
+    }
+    if (f.mode === 'stoop' && !(inp && inp.stoop)) { f.mode = 'fly'; ev.push({ k: 'pullout', alt: f.alt }); }
+    if (f.mode === 'chase' && (!(inp && inp.stoop) || f.chaseT <= 0 || q.hidden)) { f.mode = 'fly'; ev.push({ k: 'chaseEnd' }); }
+    var want = f.h, rate = TURN, hf = 1;
+    if (f.mode === 'stoop') {
+      var sk = f.steep ? STEEP_K : 1;
+      f.alt -= DIVE * sk * dt;
+      f.s = Math.min(SMAX, V + KSP * (f.steep ? 1.4 : 1) * (f.alt0 - Math.max(0, f.alt)));
+      var aq = Math.atan2(q.y - f.y, q.x - f.x);
+      want = (!q.hidden && Math.abs(adiff(aq, f.h)) < (f.steep ? 2.2 : CONE)) ? aq : f.h; rate = f.steep ? 3.2 : TURN_STOOP; hf = f.steep ? STEEP_H : 1;
+    } else if (f.mode === 'chase') {
+      f.chaseT -= dt; f.s = Math.max(V, f.s - 30 * dt); want = aq0; rate = 3.6;
+      if (dist(f, q) < (14 + (q.kind === 'l' ? 6 : 0)) * F.spec.ease) return strikeNow(F, ev, { chase: true });
+    } else {
+      if (f.s > V) f.s = Math.max(V, f.s - PULL * dt); else f.s = Math.min(V, f.s + 60 * dt);
+      var th = thermalAt(F, f), cl = CLIMB * (inp && inp.climb || 1);
+      if (th) {   // rising air: she climbs three times as fast and past her usual ceiling
+        if (f.alt < ALT_HI) f.alt = Math.min(ALT_HI, f.alt + cl * TH_CLIMB * dt);
+        F.thT += dt; F.thOut = 0; if (!f.inTh) { f.inTh = true; ev.push({ k: 'thermal' }); }
+        if (F.thT >= 2 && !F.thRiding) { F.thRiding = true; F.thRides++; ev.push({ k: 'thermalRide' }); }
+        if (F.stam != null) F.stam = Math.min(100, F.stam + 18 * dt);
+      } else {
+        F.thOut = (F.thOut || 0) + dt; if (f.inTh && F.thOut > 0.8) { f.inTh = false; F.thT = 0; F.thRiding = false; }   // a brush past the edge of the rising air does not end the ride
+        if (f.alt > ALT_MAX) f.alt = Math.max(ALT_MAX, f.alt - 2 * dt); else f.alt = Math.min(ALT_MAX, f.alt + cl * dt);
+      }
+      if (f.alt >= STOOP_MIN) f.chased = false;
+      var P = F.path[f.pi];
+      while (P && dist(f, P) < WP_R) { f.pi++; P = F.path[f.pi]; }
+      if (P) { want = Math.atan2(P.y - f.y, P.x - f.x); f.wait = false; }
+      else {
+        if (!f.wait) { f.wait = true; ev.push({ k: 'waiting' }); }
+        var nt = nearThermal(F, f, 110);
+        if (nt) { var ca = Math.atan2(f.y - nt.y, f.x - nt.x), cd = dist(f, nt), sg = adiff(f.h, ca) >= 0 ? 1 : -1; want = ca + sg * (Math.PI / 2 + clamp((cd - 64) / 40, -1, 1) * 0.9); rate = TURN; }   // she rides the thermal, circling up
+        else { want = f.h - 1; rate = TURN * 0.55; }
+      }
+      if (f.x < -40 || f.x > FW + 40 || f.y < -40 || f.y > FH + 30) { want = Math.atan2(FH / 2 - f.y, FW / 2 - f.x); rate = TURN; }
+    }
+    var d = adiff(want, f.h); f.h += clamp(d, -rate * dt, rate * dt);
+    var wk = f.mode === 'stoop' || f.mode === 'chase' ? 0.4 : 1;
+    f.x += Math.cos(f.h) * f.s * hf * dt + W.x * wk * dt; f.y += Math.sin(f.h) * f.s * hf * dt + W.y * wk * dt;
+    if (f.mode === 'stoop' && f.alt <= 0) return strikeNow(F, ev, {});
+    if (F.stam != null && f.mode !== 'stoop') { F.stam -= (100 / F.spec.limit) * dt; if (F.stam <= 0) { F.stam = 0; F.over = true; F.result = 'escaped'; F.why = 'tired'; ev.push({ k: 'tired' }); return ev; } }
+    if (F.t >= F.limit) { F.over = true; F.result = 'escaped'; F.why = 'tired'; ev.push({ k: 'tired' }); return ev; }
+    if ((q.kind === 'h' || q.kind === 'r') && (q.x < -30 || q.x > FW + 30 || q.y < -30 || q.y > FH + 10)) { F.over = true; F.result = 'escaped'; F.why = 'edge'; ev.push({ k: 'edge' }); }
+    return ev;
+  }
+  /** The strike: a bind or a miss. Pigeons in a tight flock confuse her; a crouching houbara is hard to take from straight above; right after Hurra's stoop the quarry is off balance (a one-two). */
+  function strikeNow(F, ev, o) {
+    var f = F.f, q = F.q; f.alt = 0;
+    var target = q, conf = false;
+    if (q.kind === 'p') {
+      var best = null, bd = 1e9; q.birds.forEach(function (B) { var dd = dist(B, f); if (dd < bd) { bd = dd; best = B; } });
+      target = best; var nb = 0; q.birds.forEach(function (B) { if (B !== best && dist(B, best) < 42) nb++; }); conf = nb >= 3;
+    }
+    var dd = dist(f, target), r = o.chase ? (14 + (q.kind === 'l' ? 6 : 0)) * F.spec.ease : strikeR(f.alt0, q.kind === 'p' ? 'h' : q.kind, F.spec.ease) + (q.kind === 'p' ? 4 * F.spec.ease : 0);
+    var crouch = !o.chase && f.steep && q.kind === 'h' && habitOf(F.hab) === 'steep';
+    var oneTwo = !!F.p && F.t - F.p.last < ONE_TWO;
+    if (conf) r *= 0.55; if (crouch) r *= 0.7; if (oneTwo) r *= 1.3;
+    var hit = o.chase ? true : dd <= r && !q.hidden;
+    if (hit && q.kind === 'p') { q.x = target.x; q.y = target.y; q.bound = q.birds.indexOf(target); }
+    F.strike = { hit: hit, d: Math.round(dd * 10) / 10, r: Math.round(r * 10) / 10, alt0: Math.round(f.alt0), x: f.x, y: f.y, hidden: !!q.hidden, steep: !o.chase && f.steep, chase: !!o.chase,
+      oneTwo: hit && oneTwo, confused: conf, crouch: crouch, straggler: hit && q.kind === 'p' && q.bound === 0 && !conf, doubled: hit && q.kind === 'r' && !!q.doubled };
+    ev.push({ k: 'strike', hit: hit, d: dd, r: r, hidden: !!q.hidden, steep: F.strike.steep, chase: !!o.chase, oneTwo: F.strike.oneTwo, confused: conf });
+    F.over = true; F.result = hit ? 'caught' : 'escaped'; F.why = hit ? '' : q.hidden ? 'hid' : conf ? 'flock' : ((target.x - f.x) * Math.cos(f.h) + (target.y - f.y) * Math.sin(f.h) > 0 ? 'short' : 'over');
+    f.mode = hit ? 'bound' : 'ground';
+    return ev;
+  }
+  function stepQuarry(F, dt, sp, ev) {
+    var q = F.q;
+    if (q.kind === 'l') { q.t += dt * sp; lurePos(q); }
+    else if (q.kind === 'p') stepPigeons(F, dt, sp, ev);
+    else if (q.kind === 'r') stepHare(F, dt, sp, ev);
+    else stepHoubara(F, dt, sp, ev);
+  }
+  /** Pigeons wheel in a flock; a stoop near them bursts it (earlier if they have read your slanting stoops); a steep habit keeps them tight. */
+  function stepPigeons(F, dt, sp, ev) {
+    var q = F.q, f = F.f, hb = habitOf(F.hab);
+    q.t += dt * sp;
+    var near = dist(f, q) < (hb === 'slant' ? 300 : 200);
+    if ((f.mode === 'stoop' || f.mode === 'chase') && near && q.burst <= 0) { q.burst = 1e-3; ev.push({ k: 'burst' }); }
+    if (q.burst > 0) { q.burst += dt * 0.9; if (q.burst >= 1) q.burst = 0; }
+    q.tight = hb === 'steep' ? 1 : 0;
+    pigeonPos(q);
+  }
+  /** The hare: sits, then runs flat out; under a slanting stoop or a chase it doubles back (a steep stoop from right above is too quick for it). */
+  function stepHare(F, dt, sp, ev) {
+    var q = F.q, f = F.f, hb = habitOf(F.hab);
+    if (!q.run) { if (F.cast && (F.t - F.castT > 3 || dist(f, q) < 260)) { q.run = true; ev.push({ k: 'flush' }); } else return; }
+    var df = dist(f, q);
+    q.dblCool -= dt; q.burst -= dt;
+    var trig = f.mode === 'stoop' ? (f.steep ? (hb === 'steep' && df < 90) : df < (hb === 'slant' ? 210 : 150) && f.alt < 45) : f.mode === 'chase' ? df < 60 : false;
+    if (trig && q.dblCool <= 0) { q.h += Math.PI + (rnd(q) - 0.5) * 0.7; q.dblCool = 1.3; q.burst = 0.5; q.dbl++; q.doubled = true; ev.push({ k: 'double' }); }
+    var want = q.h;
+    if (q.dblCool <= 0.6 && df < 360) { var away = Math.atan2(q.y - f.y, q.x - f.x); want = away + clamp(adiff(Math.atan2(FH * 0.4 - q.y, FW / 2 - q.x), away), -0.7, 0.7); /* away from her, but it keeps to the open sand it knows */ q.jink -= dt; if (q.jink <= 0) { q.jink = 0.8 + rnd(q) * 1.0; q.off = (rnd(q) - 0.5) * (hb === 'steep' ? 2.2 : 1.2); } want += q.off || 0; }
+    else if (q.dblCool <= 0.6) { want = -Math.PI / 2 + (q.off || 0); }
+    q.h += clamp(adiff(want, q.h), -4 * dt, 4 * dt);
+    var v = q.sp * sp * (q.burst > 0 ? 1.15 : 1);
+    q.x += Math.cos(q.h) * v * dt; q.y += Math.sin(q.h) * v * dt;
+  }
+  /** Hurra, the second falcon (act 3): waits on high on the far side of the quarry and stoops at it every few seconds. She never binds; she
+   *  puts the quarry in — it breaks away from her, and for 1.8 s after her stoop your bind ring is 30 % bigger (a one-two). */
+  function stepPartner(F, dt, ev) {
+    var P = F.p, q = F.q, f = F.f;
+    if (P.mode === 'glove') { if (!F.cast || F.t - F.castT < 1.2) return; P.mode = 'fly'; P.s = V * 0.8; }
+    if (P.mode === 'stoop') {
+      P.st -= dt; P.alt = Math.max(0, P.alt - 90 * dt); var aq = Math.atan2(q.y - P.y, q.x - P.x); P.h += clamp(adiff(aq, P.h), -3 * dt, 3 * dt); P.s = 300;
+      P.x += Math.cos(P.h) * P.s * 0.5 * dt; P.y += Math.sin(P.h) * P.s * 0.5 * dt;
+      if (P.st <= 0) {   // she rakes past and throws up: the quarry breaks away from her
+        P.mode = 'fly'; P.alt = 30; P.last = F.t; P.cool = 5 + rnd(P) * 2.5; ev.push({ k: 'prake' });
+        if (q.kind === 'h' || q.kind === 'r') { if (q.run) { q.h = Math.atan2(q.y - P.y, q.x - P.x) + (rnd(q) - 0.5) * 0.6; q.panic = 0.6; if (q.kind === 'r') { q.dblCool = 0.8; q.doubled = true; } } }
+        else if (q.kind === 'p') { if (q.burst <= 0) q.burst = 1e-3; }
+      }
+      return;
+    }
+    P.cool -= dt; P.alt = Math.min(95, P.alt + 14 * dt);
+    var away = Math.atan2(q.y - f.y, q.x - f.x) + P.side * 0.5, tx = q.x + Math.cos(away) * 150, ty = q.y + Math.sin(away) * 150;
+    tx = clamp(tx, 40, FW - 40); ty = clamp(ty, 40, FH - 60);
+    var wantP = Math.atan2(ty - P.y, tx - P.x);
+    if (Math.hypot(tx - P.x, ty - P.y) < 40) wantP = P.h - 1;
+    P.h += clamp(adiff(wantP, P.h), -TURN * dt, TURN * dt); P.s = V;
+    P.x += Math.cos(P.h) * P.s * dt; P.y += Math.sin(P.h) * P.s * dt;
+    if (P.cool <= 0 && P.alt >= 60 && dist(P, q) < 210 && (q.kind === 'l' || q.kind === 'p' || q.run) && f.mode !== 'stoop') { P.mode = 'stoop'; P.st = 0.9; ev.push({ k: 'pstoop' }); }
+  }
+  function stepHoubara(F, dt, sp, ev) {
+    var q = F.q, f = F.f;
+    if (!q.run) {
+      if (F.cast && (F.t - F.castT > 2.5 || dist(f, q) < 300)) { q.run = true; ev.push({ k: 'flush' }); }
+      else return;
+    }
+    var df = dist(f, q), want = q.h;
+    var hb = F.spec.adapt ? habitOf(F.hab) : null, jd = f.steep ? (hb === 'steep' ? 120 : 0) : hb === 'slant' ? 260 : 170;
+    if (f.mode === 'stoop' && df < jd && q.panic <= 0 && !q.hidden) { q.panic = 0.9; q.h += (rnd(q) < 0.5 ? -1 : 1) * (0.6 + rnd(q) * 0.4); ev.push({ k: 'jink' }); }
+    q.panic -= dt;
+    // run for cover under a palm when she stoops
+    var palm = null, pd = 1e9;
+    for (var i = 0; i < F.palms.length; i++) { var d = dist(F.palms[i], q); if (d < pd) { pd = d; palm = F.palms[i]; } }
+    if (palm && pd < palm.r * 0.7) { if (!q.hidden) { q.hidden = true; ev.push({ k: 'hide' }); } q.hideT = 1.0; }
+    if (q.hidden) { if (f.mode === 'stoop' && df < 220) q.hideT = 1.0; q.hideT -= dt; if (q.hideT <= 0) { q.hidden = false; q.h = rnd(q) * TAU; } else return; }
+    if (palm && pd < 150 && f.mode === 'stoop') want = Math.atan2(palm.y - q.y, palm.x - q.x);
+    else if (df < 340) {
+      var away = Math.atan2(q.y - f.y, q.x - f.x);
+      want = away + clamp(adiff(-Math.PI / 2, away), -0.4, 0.4);   // away from her, leaning north, out over the dunes
+      q.jink -= dt;
+      if (q.jink <= 0) { q.jink = 1.1 + rnd(q) * 1.4; q.off = (rnd(q) - 0.5) * 2.2; }
+      want += q.off || 0;
+    } else { q.jink -= dt; if (q.jink <= 0) { q.jink = 1.4 + rnd(q) * 1.6; q.off = (rnd(q) - 0.5) * 2.4; } want = -Math.PI / 2 + (q.off || 0); }
+    q.h += clamp(adiff(want, q.h), -3.2 * dt, 3.2 * dt);
+    var v = q.sp * sp * (q.panic > 0 ? 1.1 : 1);
+    q.x += Math.cos(q.h) * v * dt; q.y += Math.sin(q.h) * v * dt;
+  }
+  /** After a miss: the glove brings her round once more (Leather Glove). She climbs from 45, the houbara runs on. */
+  function reprieve(F) {
+    if (!F.over || F.result !== 'escaped' || (F.why !== 'short' && F.why !== 'over' && F.why !== 'hid' && F.why !== 'flock')) return false;
+    F.over = false; F.result = null; F.why = ''; F.strike = null;
+    var f = F.f; f.mode = 'fly'; f.alt = 45; f.s = V; f.reprieves++; F.path = []; f.pi = 0; f.wait = false; f.steep = false; f.chased = false; if (F.stam != null) F.stam = Math.max(F.stam, 40);
+    if (F.q.kind === 'h') { F.q.panic = 0; F.q.hidden = false; }
+    return true;
+  }
+  /** Where the quarry will be over the next secs (a clone runs forward; the falcon is held where she is). */
+  function predict(F, secs, every) {
+    var C = JSON.parse(JSON.stringify(F)), out = [], dt = 1 / 40, n = Math.round(secs / dt), e = Math.max(1, Math.round((every || 0.25) / dt));
+    C.f.mode = 'fly'; C.path = []; C.limit = 1e9; C.over = false;
+    for (var i = 1; i <= n; i++) {
+      stepQuarry(C, dt, 1, []);
+      if (i % e === 0) out.push({ x: Math.round(C.q.x), y: Math.round(C.q.y) });
+    }
+    return out;
+  }
+  function digest(F) { return [Math.round(F.f.x), Math.round(F.f.y), Math.round(F.f.alt), Math.round(F.q.x), Math.round(F.q.y), F.result || '-'].join('.'); }
+
+  // ── Advanced: named binds, stars, rank ──
+  function techZero() { return { dead: 0, thermal: 0, shamal: 0, towering: 0, tower120: 0, steep: 0, straggler: 0, chase: 0, oneTwo: 0, double: 0, names: 0, nameSet: {} }; }
+  /** The names a bind earns (G5), counted into acc. */
+  function scoreStrike(F, acc) {
+    var S = F.strike, out = []; if (!S || !S.hit) return out;
+    function nm(t, k) { out.push(t); if (k) acc[k]++; if (!acc.nameSet[t]) { acc.nameSet[t] = 1; acc.names++; } }
+    if (S.alt0 >= 120) { acc.tower120++; nm('From the thermal!', 'towering'); } else if (S.alt0 >= 90) nm('Towering stoop!', 'towering');
+    if (S.steep) nm('Vertical stoop!', 'steep');
+    if (S.chase) nm('Tail chase!', 'chase');
+    if (S.oneTwo) nm('One-two!', 'oneTwo');
+    if (S.straggler) nm('The straggler!', 'straggler');
+    if (S.doubled) nm('Doubled — and bound!', 'double');
+    if (!S.chase && S.d < S.r * 0.3) nm('Dead centre!', 'dead');
+    if (windAt(F, F.t).g > 0.5) nm('Through the shamal!', 'shamal');
+    if (F.t - F.castT < 6) nm('Straight off the glove!');
+    return out;
+  }
+  /** res = {won, binds, recalls, deaths, tech} → 0..3. ★★ all three bound with no Recall; ★★★ that plus the named moves, nothing lost, nothing used. */
+  function stars(n, res) {
+    if (!res || !res.won) return 0;
+    var s = 1, g = GOALS[clamp(n | 0, 1, 16)] || [];
+    if (res.binds >= 3 && !res.recalls) s = 2;
+    if (s === 2 && !res.deaths && g.every(function (x) { return ((res.tech || {})[x[0]] | 0) >= x[1]; })) s = 3;
+    return s;
+  }
+  function goalText(n) { var g = GOALS[clamp(n | 0, 1, 16)] || []; return g.map(function (x) { return (x[1] > 1 ? x[1] + ' × ' : '') + GOAL_NAME[x[0]]; }).join(' + '); }
+  function rankOf(total) { var r = RANKS[0][1]; RANKS.forEach(function (x) { if (total >= x[0]) r = x[1]; }); return r; }
+
+  // ── The flyers for Node: 'skilled' rides thermals, mixes steep and slanting stoops, tail-chases; 'naive' is the v1 dev flyer (slant only) ──
+  function bot(F, m, dt, pol) {
+    var q = F.q, f = F.f, sk = pol === 'skilled', tech = F.spec.tech || {};
+    if (m.F !== F) { m.F = F; m.px = null; m.vx = 0; m.vy = 0; m.re = 0; m.steep = false; m.wait = m.think == null ? 1.0 : m.think; m.thDone = !sk || !F.thermals.length; }
+    var vx = m.px == null ? 0 : (q.x - m.px) / Math.max(dt, 1e-4), vy = m.px == null ? 0 : (q.y - m.py) / Math.max(dt, 1e-4);
+    m.px = q.x; m.py = q.y; m.vx = m.vx * 0.9 + vx * 0.1; m.vy = m.vy * 0.9 + vy * 0.1;
+    var th = null; if (sk) F.thermals.forEach(function (T) { if (!th || dist(T, f) < dist(th, f)) th = T; });
+    if (f.mode === 'glove') { m.wait -= dt; if (m.wait <= 0) setPath(F, th && !m.thDone ? [{ x: th.x, y: th.y }] : [{ x: q.x, y: q.y + 80 }]); return { stoop: false }; }
+    if (f.mode === 'stoop' || f.mode === 'chase') return { stoop: true, steep: m.steep };
+    var aq = Math.atan2(q.y - f.y, q.x - f.x);
+    if (sk && !m.thDone) {   // climb in the thermal first, while the quarry is still far or sitting
+      if (!m.thAlt) m.thAlt = q.kind === 'l' ? 72 : 96;
+      var tooClose = q.kind !== 'l' && q.run && dist(f, q) < 260;
+      if (th && f.alt < m.thAlt && !tooClose && F.spec.limit >= 22 && dist(th, f) < 330 && (F.stam == null || F.stam > 20) && F.t < F.spec.limit * 0.45) { if (!F.path.length || F.f.pi >= F.path.length && dist(f, th) > th.r) setPath(F, [{ x: th.x, y: th.y }]); return { stoop: false }; }
+      m.thDone = true; m.re = 0;
+    }
+    if (sk && tech.chase && f.alt < STOOP_MIN && !f.chased && !q.hidden && dist(f, q) < 120 && Math.abs(adiff(aq, f.h)) < 1.0) return { stoop: true };
+    var T = f.alt / 70, W = windAt(F, F.t), L = { x: q.x + m.vx * T - W.x * T * 0.4, y: q.y + m.vy * T - W.y * T * 0.4 };
+    var d = dist(f, L), a = Math.abs(adiff(Math.atan2(L.y - f.y, L.x - f.x), f.h)), hb = habitOf(F.hab);
+    var wantSteep = sk && tech.steep && (q.kind === 'h' || q.kind === 'r' || q.kind === 'p') && hb !== 'steep';
+    m.steep = false;
+    if (wantSteep) {
+      var Ts = f.alt / (70 * STEEP_K), Ls = { x: q.x + m.vx * Ts, y: q.y + m.vy * Ts }, ds = dist(f, Ls), rs = reachSteep(f.alt);
+      if (f.alt >= 45 && !q.hidden && ds < rs * 1.15 + 6) { m.steep = true; return { stoop: true, steep: true }; }
+      m.re -= dt; if (m.re <= 0) { m.re = 0.4; if (f.alt < 45) { var an0 = Math.atan2(f.y - Ls.y, f.x - Ls.x); setPath(F, [{ x: Ls.x + Math.cos(an0 + 0.9) * 170, y: Ls.y + Math.sin(an0 + 0.9) * 170 }, Ls]); } else setPath(F, [Ls]); }
+      return { stoop: false };
+    }
+    var r = reach(f.alt, f.s);
+    if (f.alt >= STOOP_MIN && !q.hidden && a < 0.3 && Math.abs(d - r) < r * 0.18) return { stoop: true };
+    m.re -= dt;
+    if (m.re <= 0) {
+      m.re = 0.5;
+      if (d < r * 0.8 || f.alt < STOOP_MIN) { var an = Math.atan2(f.y - L.y, f.x - L.x), rad = Math.max(r * 1.3, 140); setPath(F, [{ x: L.x + Math.cos(an + 0.9) * rad, y: L.y + Math.sin(an + 0.9) * rad }, L]); }
+      else setPath(F, [L]);
+    }
+    return { stoop: false };
+  }
+  /** A whole day (three flights) in Node with a flyer. */
+  function simDay(n, pol, seed) {
+    var spec = mission(n), hab = { slant: 0, steep: 0 }, binds = 0, acc = techZero(), deaths = 0, dt = 1 / 120;
+    for (var k = 0; k < 3; k++) {
+      if (binds + (3 - k) < spec.need) break;
+      var F = newFlight(spec, k, (seed + k * 1013) >>> 0, hab), m = { think: pol === 'skilled' ? 0.8 : 1.0 };
+      for (var i = 0; i < 120 * 70 && !F.over; i++) {
+        var b = bot(F, m, dt, pol), evs = step(F, dt, { stoop: b.stoop, steep: b.steep });
+        for (var e = 0; e < evs.length; e++) if (evs[e].k === 'thermalRide') acc.thermal++;
+        if (F.over && F.result === 'escaped' && pol === 'skilled' && false) break;
+      }
+      if (F.result === 'caught') { binds++; scoreStrike(F, acc); } else deaths++;
+    }
+    var res = { won: binds >= spec.need, binds: binds, recalls: 0, deaths: deaths, tech: acc };
+    res.stars = stars(n, res);
+    return res;
+  }
+  function actRates(N) {
+    N = N || 30; var out = {};
+    ['skilled', 'naive'].forEach(function (pol) {
+      var w = [0, 0, 0]; for (var n = 1; n <= 15; n++) for (var k = 0; k < N; k++) if (simDay(n, pol, hash('rates-' + k + '-' + n)).won) w[Math.ceil(n / 5) - 1]++;
+      out[pol] = w.map(function (x) { return Math.round(x / (5 * N) * 100); });
+    });
+    return out;
+  }
+
+  // ── Self-test (runs in the page and in Node) ──
+  function selfTest() {
+    var passed = 0, fails = [];
+    function ok(c, m) { if (c) passed++; else fails.push(m); }
+    function run(F, secs, inp) { var ev = [], n = Math.round(secs * 60); for (var i = 0; i < n && !F.over; i++) ev = ev.concat(step(F, 1 / 60, typeof inp === 'function' ? inp(F) : inp)); return ev; }
+    // the table
+    ok(MS.length === 16, '15 missions + the top tier');
+    for (var n = 1; n <= 16; n++) { var m = mission(n); ok(m.quarry.length === 3 && m.need >= 2 && m.need <= 3 && m.limit >= 15, 'mission ' + n + ' shape'); ok(m.act === Math.min(3, Math.floor((n - 1) / 5) + 1), 'act of ' + n); }
+    ok(mission(5).name === 'Liwa at Dawn' && mission(15).need === 2 && mission(16).need === 3, 'finals');
+    // she waits on the glove until a line is drawn; the quarry still moves
+    var F = newFlight(mission(1), 0, 42), x0 = F.q.x;
+    run(F, 1, {}); ok(F.f.mode === 'glove' && F.f.x === GLOVE.x, 'on the glove until cast'); ok(F.q.x !== x0, 'the lure swings');
+    ok(setPath(F, [{ x: 500, y: 300 }]) === 'cast' && F.cast, 'cast off by the first line');
+    // she follows the line: a straight line north brings her near (500, 300) in about 2 s
+    F = newFlight(mission(1), 0, 7); setPath(F, [{ x: 500, y: 300 }]);
+    var ev = run(F, 2.2, {});
+    ok(ev.some(function (e) { return e.k === 'waiting'; }), 'reaches the end of the line and waits on');
+    ok(F.f.alt > ALT0 + 14 && F.f.alt < ALT0 + 22, 'climbs ~8 per second (' + F.f.alt.toFixed(1) + ')');
+    // a corner: she turns onto the next leg with momentum (no instant turn)
+    F = newFlight(mission(1), 0, 7); setPath(F, [{ x: 500, y: 400 }, { x: 800, y: 400 }]);
+    run(F, 1.3, {}); var h1 = F.f.h; run(F, 0.1, {}); ok(Math.abs(adiff(F.f.h, h1)) <= TURN * 0.1 + 1e-9, 'turn rate is limited');
+    run(F, 2.5, {}); ok(F.f.x > 650, 'follows the second leg east (' + F.f.x.toFixed(0) + ')');
+    // altitude has a ceiling; the qahwa doubles the climb only up to it
+    F = newFlight(mission(1), 0, 7); setPath(F, [{ x: 500, y: 300 }]); run(F, 20, {}); ok(Math.abs(F.f.alt - ALT_MAX) < 1e-6, 'ceiling ' + ALT_MAX);
+    F = newFlight(mission(1), 0, 7); setPath(F, [{ x: 500, y: 300 }]); run(F, 2, { climb: 1.5 }); ok(F.f.alt > ALT0 + 22, 'qahwa climbs faster');
+    // the stoop: reach grows with height
+    var r40 = reach(40), r100 = reach(100);
+    ok(r40 > 80 && r40 < 140 && r100 > 300 && r100 < 420, 'reach 40→' + r40.toFixed(0) + ', 100→' + r100.toFixed(0));
+    ok(Math.abs(reach(100) - reach(100)) === 0, 'reach is deterministic');
+    // a stoop started at the right distance on a still lure binds; started far away it lands short
+    function stoopAt(distance, alt) {
+      var G = newFlight(mission(1), 0, 3); G.q.w = 0; G.q.ph = 0; G.q.cx = 500; G.q.cy = 200; lurePos(G.q);
+      setPath(G, [{ x: 500, y: 0 }]); G.f.x = 500; G.f.y = 200 + distance; G.f.h = -Math.PI / 2; G.f.alt = alt; G.f.s = V; G.wind = { x: 0, y: 0 };
+      run(G, 6, { stoop: true }); return G;
+    }
+    var hit = stoopAt(reach(80), 80); ok(hit.result === 'caught', 'right distance binds (d ' + (hit.strike && hit.strike.d) + ')');
+    var shortF = stoopAt(reach(80) + 120, 80); ok(shortF.result === 'escaped' && shortF.why === 'short', 'too far lands short');
+    var over = stoopAt(reach(80) - 120, 80); ok(over.result === 'escaped' && over.why === 'over', 'too close overshoots (' + over.why + ')');
+    ok(hit.f.mode === 'bound' && shortF.f.mode === 'ground', 'modes after the strike');
+    // let go mid-stoop: she pulls out, keeps some speed, loses the height
+    F = stoopAt(500, 90); // (already resolved above; build a fresh one)
+    F = newFlight(mission(1), 0, 3); setPath(F, [{ x: 500, y: 0 }]); F.f.alt = 90; F.f.s = V;
+    run(F, 0.5, { stoop: true }); var altMid = F.f.alt, spMid = F.f.s; ev = run(F, 1 / 60, {});
+    ok(ev.some(function (e) { return e.k === 'pullout'; }) && F.f.mode === 'fly' && altMid < 60 && F.f.s > V, 'pull out keeps speed, loses height');
+    F = newFlight(mission(1), 0, 3); setPath(F, [{ x: 500, y: 0 }]); ev = run(F, 0.5, { stoop: true }); ok(F.f.mode === 'fly' && !ev.some(function (e) { return e.k === 'stoop'; }), 'too low to stoop under ' + STOOP_MIN);
+    // the wind and the shamal
+    F = newFlight(mission(3), 0, 99); ok(F.gusts.length === 1, 'mission 3 has a gust');
+    var G0 = F.gusts[0], wq = windAt(F, G0.t0 + G0.dur / 2), w0 = windAt(F, G0.t0 - 1);
+    ok(wq.g === 1 && Math.abs(wq.x - (F.wind.x + G0.x)) < 1e-9, 'gust at full mid-way');
+    ok(w0.g === 0 && w0.x === F.wind.x, 'no gust before it starts');
+    F.t = G0.t0 - 1.5; ok(Math.abs(gustSoon(F) - 1.5) < 1e-9, 'a gust is announced');
+    var A1 = newFlight(mission(3), 0, 99), B1 = newFlight(mission(3), 0, 99);
+    ok(JSON.stringify(A1.gusts) === JSON.stringify(B1.gusts), 'gusts are seeded');
+    // the wind pushes her: the same line drifts east with a westerly
+    var Fw = newFlight(mission(1), 0, 5), Fc = newFlight(mission(1), 0, 5); Fw.wind = { x: 60, y: 0 }; Fc.wind = { x: 0, y: 0 };
+    setPath(Fw, [{ x: 500, y: 100 }]); setPath(Fc, [{ x: 500, y: 100 }]); run(Fw, 1, {}); run(Fc, 1, {});
+    ok(Fw.f.x > Fc.f.x + 20, 'wind drifts her (' + (Fw.f.x - Fc.f.x).toFixed(1) + ')');
+    // the houbara sits until flushed, then runs; the same seed runs the same way
+    var H1 = newFlight(mission(4), 1, 1234), H2 = newFlight(mission(4), 1, 1234);
+    ok(H1.q.kind === 'h', 'flight 2 of mission 4 is a houbara');
+    var hx = H1.q.x; run(H1, 1, {}); ok(H1.q.x === hx, 'sits before the cast');
+    setPath(H1, [{ x: 100, y: 600 }]); setPath(H2, [{ x: 100, y: 600 }]); run(H1, 5, {}); run(H2, 5, {});
+    ok(H1.q.run && digest(H1) === digest(H2), 'flushed, and deterministic (' + digest(H1) + ')');
+    // the whistle slows it
+    var S1 = newFlight(mission(4), 1, 77), S2 = newFlight(mission(4), 1, 77); S1.q.run = S2.q.run = true; S1.cast = S2.cast = true; S1.f.mode = S2.f.mode = 'fly';
+    var sa = { x: S1.q.x, y: S1.q.y }; run(S1, 1, { slow: 0.6 }); run(S2, 1, {});
+    ok(dist(S1.q, sa) < dist(S2.q, sa), 'the whistle slows the quarry');
+    // a houbara under a palm cannot be struck
+    var P = newFlight(mission(6), 0, 11); P.palms = [{ x: 500, y: 200, r: 34 }]; P.q.x = 500; P.q.y = 200; P.q.run = true; P.cast = true;
+    setPath(P, [{ x: 500, y: 0 }]); P.f.x = 500; P.f.y = 200 + reach(70); P.f.alt = 70; P.f.s = V; P.wind = { x: 0, y: 0 }; P.q.sp = 0;
+    run(P, 4, { stoop: true }); ok(P.result === 'escaped' && P.why === 'hid', 'hidden under the fronds (' + P.why + ')');
+    // the glove: one more go after a miss, never after a catch
+    ok(reprieve(shortF) && shortF.f.mode === 'fly' && shortF.f.alt === 45 && !shortF.over, 'the glove brings her round');
+    ok(!reprieve(hit), 'no reprieve after a catch');
+    // tired: the flight ends at its limit
+    var T = newFlight(mission(11), 0, 5); setPath(T, [{ x: 500, y: 500 }]); run(T, 20, {}); ok(T.result === 'escaped' && T.why === 'tired' && T.t <= 15 + 1 / 60 + 1e-9, 'the telwah race is timed');
+    // predict is pure (does not move the real quarry)
+    var Q = newFlight(mission(5), 0, 8); setPath(Q, [{ x: 500, y: 300 }]); run(Q, 3, {}); var before = digest(Q), path = predict(Q, 3);
+    ok(path.length === 12 && digest(Q) === before, 'predict leaves the flight alone');
+    // ── Advanced (2026-10-29) ──
+    var M2 = mission(2), Th = newFlight(M2, 0, 21); ok(Th.thermals.length === 1 && mission(1).th === 0, 'thermals from mission 2');
+    var t0 = Th.thermals[0]; setPath(Th, [{ x: t0.x, y: t0.y }]); Th.f.x = t0.x; Th.f.y = t0.y + 30; Th.f.alt = 100; Th.limit = 99;
+    run(Th, 5, {}); ok(Th.f.alt > ALT_MAX + 20 && Th.thRides >= 1, 'a thermal lifts her past the ceiling (' + Th.f.alt.toFixed(0) + ')');
+    var inside = 0; for (var z = 0; z < 20; z++) { run(Th, 0.25, {}); if (dist(Th.f, t0) < t0.r + 30) inside++; } ok(inside >= 18, 'waiting on in a thermal she circles in it (' + inside + '/20)');
+    ok(Th.f.alt <= ALT_HI + 1e-9, 'thermal ceiling ' + ALT_HI);
+    var S6 = newFlight(mission(6), 0, 5); ok(S6.stam === 100 && newFlight(mission(5), 0, 5).stam === null, 'stamina from act 2');
+    S6.q = newFlight(mission(1), 0, 5).q; setPath(S6, [{ x: 100, y: 600 }]); S6.thermals = []; run(S6, 40, {}); ok(S6.result === 'escaped' && S6.why === 'tired' && Math.abs(S6.t - mission(6).limit) < 1.5, 'stamina runs out at the old limit without thermals (' + S6.t.toFixed(1) + ')');
+    var S7 = newFlight(mission(7), 0, 5); ok(!!S7.shift, 'mission 7 has a wind shift');
+    var wb = windAt(S7, S7.shift.t - 0.1), wa = windAt(S7, S7.shift.t + 2); ok(Math.abs(Math.atan2(wa.y, wa.x) - Math.atan2(wb.y, wb.x)) > 1 || wb.g || wa.g, 'the wind turns');
+    function steepAt(n, distance, alt, steep) {
+      var G = newFlight(mission(n), 0, 3); G.q = { kind: 'h', x: 500, y: 250, h: 0, sp: 0, run: true, jink: 9, panic: 9, hidden: false, hideT: 0, rs: 1 }; G.cast = true; G.palms = []; G.thermals = []; G.p = null;
+      setPath(G, [{ x: 500, y: 0 }]); G.f.x = 500; G.f.y = 250 + distance; G.f.h = -Math.PI / 2; G.f.alt = alt; G.f.s = V; G.wind = { x: 0, y: 0 }; G.gusts = []; G.shift = null;
+      var e2 = run(G, 6, { stoop: true, steep: steep }); return { G: G, ev: e2 };
+    }
+    var rs80 = reachSteep(80); ok(rs80 > 30 && rs80 < 90 && rs80 < reach(80) / 3, 'a steep stoop falls nearly straight (' + rs80.toFixed(0) + ' vs ' + reach(80).toFixed(0) + ')');
+    var st1 = steepAt(6, rs80, 80, true); ok(st1.G.result === 'caught' && st1.G.strike.steep, 'steep stoop from right above binds');
+    var st0 = steepAt(5, rs80, 80, true); ok(!st0.G.strike || !st0.G.strike.steep, 'no steep stoop before mission 6');
+    var stF = steepAt(6, 260, 80, true); ok(stF.G.result === 'escaped' && stF.G.why === 'short', 'a steep stoop from far lands short');
+    // tail chase: low, behind, close, hold
+    var Ch = newFlight(mission(12), 0, 9); Ch.q = { kind: 'h', x: 500, y: 300, h: -Math.PI / 2, sp: 40, run: true, jink: 9, panic: 9, hidden: false, hideT: 0, rs: 3 }; Ch.cast = true; Ch.p = null; Ch.palms = []; Ch.thermals = []; Ch.gusts = []; Ch.shift = null; Ch.wind = { x: 0, y: 0 };
+    setPath(Ch, [{ x: 500, y: 0 }]); Ch.f.x = 500; Ch.f.y = 390; Ch.f.h = -Math.PI / 2; Ch.f.alt = 20; Ch.f.s = V;
+    var ce = run(Ch, 2, { stoop: true }); ok(ce.some(function (e) { return e.k === 'chase'; }) && Ch.result === 'caught' && Ch.strike.chase, 'tail chase runs it down');
+    var Ch0 = newFlight(mission(10), 0, 9); Ch0.q = JSON.parse(JSON.stringify(Ch.q)); Ch0.q.x = 500; Ch0.q.y = 300; Ch0.cast = true; setPath(Ch0, [{ x: 500, y: 0 }]); Ch0.f.x = 500; Ch0.f.y = 390; Ch0.f.alt = 20; Ch0.palms = [];
+    var ce0 = run(Ch0, 0.3, { stoop: true }); ok(!ce0.some(function (e) { return e.k === 'chase'; }), 'no tail chase before mission 11');
+    // pigeons: the straggler vs the heart of the flock
+    var Pg = newFlight(mission(7), 1, 4); ok(Pg.q.kind === 'p' && Pg.q.birds.length === 7, 'mission 7 flight 2: a flock of pigeons');
+    var mid = Pg.q.birds[3]; Pg.cast = true; Pg.f.mode = 'stoop'; Pg.f.alt0 = 80; Pg.f.alt = 0; Pg.f.x = mid.x; Pg.f.y = mid.y; Pg.q.tight = 1; var pe = []; strikeNow(Pg, pe, {});
+    var Pg2 = newFlight(mission(7), 1, 4); Pg2.cast = true; Pg2.f.alt0 = 80; Pg2.f.x = Pg2.q.birds[0].x + 3; Pg2.f.y = Pg2.q.birds[0].y; strikeNow(Pg2, [], {});
+    ok(Pg2.strike.hit && Pg2.strike.straggler, 'the straggler binds');
+    ok(Pg.strike.confused || Pg.strike.hit, 'the heart of the flock is checked for confusion');
+    // the hare doubles back under a slanting stoop, not under a steep one from right above
+    function hareT(steep, distance) {
+      var G = newFlight(mission(13), 0, 6); G.q.x = 500; G.q.y = 250; G.q.run = true; G.q.h = Math.PI; G.cast = true; G.p = null; G.thermals = []; G.palms = []; G.gusts = []; G.shift = null; G.wind = { x: 0, y: 0 };
+      setPath(G, [{ x: 500, y: 0 }]); G.f.x = 500; G.f.y = 250 + distance; G.f.h = -Math.PI / 2; G.f.alt = steep ? 80 : 60; G.f.s = V;
+      return run(G, 4, { stoop: true, steep: steep });
+    }
+    ok(hareT(false, reach(60)).some(function (e) { return e.k === 'double'; }), 'the hare doubles back under a slanting stoop');
+    ok(!hareT(true, reachSteep(80)).some(function (e) { return e.k === 'double'; }), 'a steep stoop from above is too quick for it');
+    // Hurra, the second falcon
+    var Hu = newFlight(mission(12), 0, 31); ok(!!Hu.p && !newFlight(mission(11), 0, 31).p, 'two falcons from mission 12'); Hu.q = newFlight(mission(1), 0, 31).q;
+    setPath(Hu, [{ x: 500, y: 300 }]); var he = run(Hu, 25, {}); ok(he.some(function (e) { return e.k === 'pstoop'; }) && he.some(function (e) { return e.k === 'prake'; }), 'Hurra stoops and rakes');
+    var O2 = steepAt(12, rs80, 80, true); ok(O2.G.strike && !O2.G.strike.oneTwo, 'no one-two without her stoop');
+    var O3 = newFlight(mission(12), 0, 3); O3.p.last = 0; O3.t = 0.5; O3.f.alt0 = 60; O3.f.x = O3.q.x + strikeR(60, 'h', 1.1) * 1.2; O3.f.y = O3.q.y; strikeNow(O3, [], {}); ok(O3.strike.hit && O3.strike.oneTwo, 'right after her stoop the ring is bigger: a one-two');
+    // habits (act 2 on): two slanting stoops and the quarry is ready for them
+    var Hb = { slant: 0, steep: 0 }, Hf = newFlight(mission(8), 1, 2, Hb); Hf.f.mode = 'fly'; Hf.f.alt = 60; Hf.cast = true;
+    step(Hf, 1 / 60, { stoop: true }); Hf.f.mode = 'fly'; step(Hf, 1 / 60, {}); step(Hf, 1 / 60, { stoop: true });
+    ok(habitOf(Hb) === 'slant', 'the quarry reads two slanting stoops');
+    var Hn = { slant: 0, steep: 0 }, Hg = newFlight(mission(6), 1, 2, Hn); Hg.f.mode = 'fly'; Hg.f.alt = 60; step(Hg, 1 / 60, { stoop: true }); ok(Hn.slant === 0, 'no habit reading before mission 8');
+    // stars and rank
+    var tz = techZero(); tz.dead = 1;
+    ok(stars(1, { won: true, binds: 3, recalls: 0, deaths: 0, tech: tz }) === 3 && stars(1, { won: true, binds: 2, deaths: 1, tech: tz }) === 1 && stars(1, { won: true, binds: 3, recalls: 1, deaths: 1, tech: tz }) === 1 && stars(1, { won: false }) === 0, 'stars');
+    ok(rankOf(0).indexOf('Mubtadi') === 0 && rankOf(45) === 'Saqqar', 'rank titles');
+    return { ok: fails.length === 0, passed: passed, total: passed + fails.length, fails: fails };
+  }
+  return { STOOP_MIN: STOOP_MIN, FW: FW, FH: FH, GLOVE: GLOVE, V: V, ALT_MAX: ALT_MAX, MS: MS, mission: mission, newFlight: newFlight, setPath: setPath, step: step, windAt: windAt, gustSoon: gustSoon,
+    reach: reach, strikeR: strikeR, reprieve: reprieve, predict: predict, digest: digest, hash: hash, adiff: adiff, dist: dist, rnd: rnd, selfTest: selfTest,
+    reachSteep: reachSteep, thermalAt: thermalAt, shiftSoon: shiftSoon, habitOf: habitOf, ALT_HI: ALT_HI, ONE_TWO: ONE_TWO, GOALS: GOALS, GOAL_NAME: GOAL_NAME, RANKS: RANKS, MX: MX,
+    stars: stars, goalText: goalText, rankOf: rankOf, bot: bot, simDay: simDay, actRates: actRates, techZero: techZero, scoreStrike: scoreStrike, stepQuarry: stepQuarry };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = Core;
+/*CORE-END*/
+
+  // ══ Basics ═════════════════════════════════════════════════════════════════════════════════════════════════
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  var DEVHOST = /^(dev\.|localhost$|127\.)/.test(location.hostname);
+  var TOUCH = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+  var RM_Q = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  var TAU = Math.PI * 2;
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function ease(t) { return t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t); }
+  var toastT = 0;
+  function toast(t, ms) { var e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { e.classList.remove('on'); }, ms || 2400); }
+  function say(t) { $('live').textContent = t; }
+  var bigT = 0;
+  function big(text, sub, ms) { var e = $('big'); e.textContent = text; if (sub) e.appendChild(el('small', null, sub)); e.classList.add('on'); clearTimeout(bigT); bigT = setTimeout(function () { e.classList.remove('on'); }, ms || 1400); say(text + (sub ? ' — ' + sub : '')); }
+  function dayKey(off) { var d = new Date(Date.now() + (off || 0) * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  // ══ The save: tm.falcon.v1 ═════════════════════════════════════════════════════════════════════════════════
+  var SKEY = 'tm.' + GAME_ID + '.v1';
+  function fresh() {
+    return { v: 1, clears: {}, best: {}, feathers: {},
+      taught: {}, causes: {}, settings: { sound: true, motion: 'auto', tips: true },
+      daily: { date: '', best: null, tries: 0 }, top: { wins: 0, played: 0 }, run: null, last: null,
+      stars: {}, drills: {} };   // advanced (2026-10-29): stars per mission, drill bests
+  }
+  function load() {
+    var d = fresh(), j = null;
+    try { j = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) { j = null; }
+    if (j && j.v === 1) Object.keys(d).forEach(function (k) { if (j[k] != null) d[k] = (typeof d[k] === 'object' && d[k] && !Array.isArray(d[k]) && typeof j[k] === 'object') ? Object.assign(d[k], j[k]) : j[k]; });
+    return d;
+  }
+  var SV = load();
+  function save() { try { localStorage.setItem(SKEY, JSON.stringify(SV)); } catch (e) { /* private mode: the session keeps it */ } }
+  function reduced() { return SV.settings.motion === 'reduced' || (SV.settings.motion !== 'full' && RM_Q.matches); }
+
+  // ══ The season ═════════════════════════════════════════════════════════════════════════════════════════════
+  var ACTS = [
+    { name: 'The Dunes at Dawn', place: 'the Liwa sands, Abu Dhabi', look: 'dawn' },
+    { name: 'The Oasis', place: 'the date palms of Al Ain', look: 'oasis' },
+    { name: 'The Festival at Dusk', place: 'a desert falconry festival', look: 'dusk' },
+  ];
+  // the challenge line on each card (the name and the numbers are the core's)
+  var CHAL = [
+    'Your first flights: bind to the telwah twice.', 'Let her climb before you stoop: height is speed.', 'The shamal blows mid-flight: watch the sand.',
+    'The first houbara. It sits until she is cast, then runs.', 'Final · three flights at dawn, houbara and the wind.',
+    'The houbara hides under the palms: catch it in the open.', 'Along the falaj, the water channel, in a gusting wind.', 'More palms, quicker birds.',
+    'Two gusts in a flight. Fly into the wind.', 'Final · the Oasis Cup, judged by the old falconers.',
+    'The telwah race: the lure far out, against the clock.', 'Dusk: the houbara are quick now.', 'Three gusts, sand everywhere.',
+    'Semi-final · a telwah race, then two houbara.', 'Final · the Golden Hood, in front of the whole festival.',
+  ];
+  function actOf(n) { return ACTS[Math.min(2, Math.floor((Math.max(1, n) - 1) / 5))]; }
+  function mName(n) { return n >= 1 && n <= 16 ? Core.MS[n - 1][0] : 'Flight ' + n; }
+  var RANKS = ['Mubtadi · beginner', 'Falconer', 'Hunter', 'Master', 'Saqqar'];
+  function clearedCount() { var k = 0; for (var n = 1; n <= 15; n++) if (SV.clears[n] > 0) k++; return k; }
+  function nextMission() { for (var n = 1; n <= 15; n++) if (!(SV.clears[n] > 0)) return n; return 15; }
+  function starTotal() { var t = 0; for (var n = 1; n <= 15; n++) t += SV.stars[n] | 0; return t; }
+  function starStr(k) { k = k | 0; return '★★★'.slice(0, k) + '☆☆☆'.slice(0, 3 - k); }
+  function rank() { return Core.rankOf(starTotal()); }
+  function unlocked(n) { return n === 1 || SV.clears[n - 1] > 0 || SV.clears[n] > 0; }
+
+  // ══ The voice: Uncle Rashid (Ammi Rashid), forty seasons with falcons — warm, patient, proud ══════════════════
+  var UR = {
+    hello: ['Salaam alaikum. The sand is cool, the bird is keen.', 'Ahlan! Coffee first, then the falcon.', 'Good morning. Hear that? The bells. She wants to fly.'],
+    welcome: ['Ahlan wa sahlan, ', 'Welcome back, ', 'Salaam, '],
+    plan: ['Draw her line. She knows the way after that.', 'Show her where to go.', 'Unhood her. Draw the line.'],
+    climb: ['Let her climb. Patience.', 'Higher, higher — she is waiting on.', 'Give her the sky first.'],
+    stoopNow: ['Now! Stoop!', 'Yalla — now!', 'Down, my girl!'],
+    hit: ['Ma sha Allah! Beautiful.', 'Bound to it! What a bird.', 'Ya salaam — clean.', 'That is falconry.'],
+    hitH: ['Bound! We ring it and let it go — it was bred to be free.', 'A clean bind. Ringed and released.', 'Ma sha Allah. Gently now — off it goes, with a ring.'],
+    short: ['Short. Start the stoop closer, or give her more height.', 'She landed short — she needed more sky.'],
+    over: ['Over! She was too close — start the stoop sooner.', 'Too close, she passed it. Earlier next time.'],
+    hid: ['Under the palms — she cannot follow there.', 'It ducked under the fronds. Catch it in the open.'],
+    flock: ['Into the middle of the flock — she could not choose.', 'Too many wings. Pick the straggler.'],
+    tired: ['She is tired. Call her back.', 'Enough for her — back to the glove.'],
+    edge: ['Away over the dunes. Next one.', 'It is gone over the crest.'],
+    gust: ['Shamal! Feel the wind.', 'Here it comes — the shamal!', 'Sand! Hold her line into it.'],
+    win: ['A good day on the sand. Tonight we tell it in the majlis.', 'She flew like her mother. Proud of you both.'],
+    lose: ['Not today. The falcon is fine; the houbara were lucky.', 'Even the best birds have days like this. Tomorrow.'],
+  };
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function call(t) { var e = $('callTxt'); if (e.textContent !== t) e.textContent = t; }
+
+  // ══ Sound: WebAudio, all synthesised — the wind, her bells, wingbeats, the stoop's roar, the shamal, the crowd ═
+  var AC = null, MASTER = null, WHITE = null, BROWN = null, WIND = null, ROAR = null, muted = false;
+  function soundOn() { return SV.settings.sound && !muted; }
+  function audio() {
+    if (AC) { if (AC.state === 'suspended') AC.resume().catch(function () {}); return AC; }
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    MASTER = AC.createGain(); MASTER.gain.value = soundOn() ? 0.8 : 0; MASTER.connect(AC.destination);
+    var n = AC.sampleRate * 2, wb = AC.createBuffer(1, n, AC.sampleRate), bb = AC.createBuffer(1, n, AC.sampleRate), w = wb.getChannelData(0), b = bb.getChannelData(0), last = 0;
+    for (var i = 0; i < n; i++) { w[i] = Math.random() * 2 - 1; last = (last + 0.02 * w[i]) / 1.02; b[i] = last * 3.5; }
+    WHITE = wb; BROWN = bb;
+    WIND = loopNoise(WHITE, 'bandpass', 520, 0.6); ROAR = loopNoise(BROWN, 'lowpass', 300, 0.8);
+    return AC;
+  }
+  function setVol() { if (MASTER) MASTER.gain.setTargetAtTime(soundOn() ? 0.8 : 0, AC.currentTime, 0.05); }
+  function loopNoise(buf, type, f, q) { var s = AC.createBufferSource(); s.buffer = buf; s.loop = true; var fl = AC.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; var g = AC.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); g.connect(MASTER); s.start(); return { gain: g, f: fl }; }
+  function level(node, v, f) { if (!AC || !node) return; node.gain.gain.setTargetAtTime(v, AC.currentTime, 0.08); if (f) node.f.frequency.setTargetAtTime(f, AC.currentTime, 0.1); }
+  function burst(t, dur, type, f, q, peak, buf) {
+    t = Math.max(t, AC.currentTime);
+    var s = AC.createBufferSource(); s.buffer = buf || WHITE; var fl = AC.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+    var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(fl); fl.connect(g); g.connect(MASTER); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+  }
+  function tone(t, dur, type, f0, f1, peak) {
+    t = Math.max(t, AC.currentTime);
+    var o = AC.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(MASTER); o.start(t); o.stop(t + dur + 0.05);
+  }
+  /** A short call through two formants: Uncle Rashid's "Yaa!" across the sand. */
+  function voice(t, syl, gain) {
+    t = Math.max(t, AC.currentTime + 0.03);
+    syl.forEach(function (s) {
+      var o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(s.f[0], t); o.frequency.linearRampToValueAtTime(s.f[1], t + s.d);
+      var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.04); g.gain.setValueAtTime(gain, t + s.d * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + s.d);
+      [[s.F1, 8, 1], [s.F2, 10, 0.6]].forEach(function (F) { var bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = F[1]; bp.frequency.value = F[0]; var fg = AC.createGain(); fg.gain.value = F[2]; o.connect(bp); bp.connect(fg); fg.connect(g); });
+      g.connect(MASTER); o.start(t); o.stop(t + s.d + 0.05); t += s.d + (s.gap || 0);
+    });
+  }
+  var SFX = {
+    bells: function (n) { if (!audio()) return; var t = AC.currentTime; for (var i = 0; i < (n || 5); i++) { var f = 3900 + Math.random() * 1600; tone(t + i * 0.06 + Math.random() * 0.03, 0.35, 'sine', f, f * 0.995, 0.05); tone(t + i * 0.06, 0.2, 'sine', f * 1.51, f * 1.5, 0.02); } },
+    cast: function () { if (!audio()) return; var t = AC.currentTime; burst(t, 0.25, 'bandpass', 900, 0.8, 0.25); SFX.bells(6); voice(t + 0.1, [{ d: 0.45, f: [190, 150], F1: 700, F2: 1150 }], 0.18); },
+    flap: function () { if (!audio()) return; burst(AC.currentTime, 0.09, 'lowpass', 700, 0.7, 0.10, BROWN); },
+    stoop: function () { if (!audio()) return; var t = AC.currentTime; tone(t, 1.2, 'sine', 900, 300, 0.05); burst(t, 0.4, 'highpass', 2500, 0.5, 0.06); },
+    hit: function (big) { if (!audio()) return; var t = AC.currentTime; tone(t, 0.25, 'sine', 120, 50, 0.55); burst(t, 0.5, 'bandpass', 1300, 0.6, 0.35); SFX.bells(9);
+      if (big) voice(t + 0.25, [{ d: 0.22, f: [210, 230], F1: 650, F2: 1100 }, { d: 0.6, f: [240, 180], F1: 750, F2: 1250 }], 0.22); },
+    miss: function () { if (!audio()) return; var t = AC.currentTime; burst(t, 0.6, 'lowpass', 600, 0.6, 0.25, BROWN); tone(t, 0.3, 'triangle', 300, 200, 0.06); },
+    flush: function () { if (!audio()) return; var t = AC.currentTime; for (var i = 0; i < 6; i++) burst(t + i * 0.05, 0.05, 'bandpass', 1500 + Math.random() * 900, 1.5, 0.08); },
+    ui: function () { if (!audio()) return; tone(AC.currentTime, 0.06, 'triangle', 700, 950, 0.07); },
+    thermal: function () { if (!audio()) return; var t = AC.currentTime; burst(t, 1.2, 'bandpass', 500, 0.6, 0.08); tone(t, 1.2, 'sine', 330, 660, 0.04); },
+    flock: function () { if (!audio()) return; var t = AC.currentTime; for (var i = 0; i < 10; i++) burst(t + i * 0.04, 0.06, 'bandpass', 900 + Math.random() * 700, 1.2, 0.07); },
+    crowd: function () { if (!audio()) return; var t = AC.currentTime; burst(t, 1.8, 'bandpass', 1200, 0.4, 0.14); for (var i = 0; i < 6; i++) voice(t + Math.random() * 0.4, [{ d: 0.5 + Math.random() * 0.4, f: [250 + Math.random() * 150, 300 + Math.random() * 120], F1: 700, F2: 1300 }], 0.03); for (i = 0; i < 18; i++) burst(t + 0.2 + Math.random() * 1.2, 0.03, 'bandpass', 1900 + Math.random() * 1400, 1.4, 0.06); },
+  };
+
+  /** The How-to illustration: the falcon flies her line to the swinging lure and stoops, looping. */
+  function howPreview(x, w, h, t) {
+    x.clearRect(0, 0, w, h);
+    var g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#f0cf8f'); g.addColorStop(1, '#d9a35a'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+    x.strokeStyle = 'rgba(120,70,20,.18)'; x.lineWidth = 1; for (var i = 0; i < 8; i++) { x.beginPath(); for (var X = 0; X <= w; X += 8) x.lineTo(X, h * (0.1 + i * 0.12) + Math.sin(X * 0.05 + i) * 4); x.stroke(); }
+    var u = (t * 0.35) % 1, s = Math.min(w, h) / 160, fx, fy, ang = -0.3, mode = 'fly', alt = 40;
+    var lx = w * 0.72 + Math.sin(t * 1.4) * w * 0.08, ly = h * 0.4 + Math.sin(t * 2.8) * h * 0.06;
+    drawLurePad(x, lx, ly, 12 * s, t);
+    fx = lerp(w * 0.1, lx, ease(u)); fy = lerp(h * 0.9, ly, ease(u)); ang = Math.atan2(ly - h * 0.9, lx - w * 0.1);
+    if (u > 0.65) { mode = 'stoop'; alt = 40 * (1 - (u - 0.65) / 0.35); }
+    drawFalconTop(x, fx, fy, ang, s * 1.2, mode, t, alt);
+  }
+
+  // ══ The greeting: Uncle Rashid ═══════════════════════════════════════════════════════════════════════════════
+  function greet() {
+    var g = $('greet'); g.textContent = '';
+    var t = el('div'), cl = clearedCount();
+    t.appendChild(document.createTextNode('Uncle Rashid: “' + UR.hello[new Date().getDate() % UR.hello.length] + '”'));
+    t.appendChild(el('small', null, rank() + ' · ' + cl + ' of 15 days flown' + (SV.last ? ' · last: ' + SV.last.txt : '')));
+    g.appendChild(t);
+  }
+
+  // ══ Screens: one variable, setScene is the only way to change it ═════════════════════════════════════════════
+  var SCENES = { title: 'sc-title', missions: 'sc-missions', how: 'sc-how', settings: 'sc-settings', pause: 'sc-pause', results: 'sc-results', play: null };
+  var SCENE = 'title';
+  function setScene(s) {
+    Object.keys(SCENES).forEach(function (k) { if (SCENES[k]) $(SCENES[k]).classList.toggle('on', k === s); });
+    SCENE = s;
+    $('back').classList.toggle('on', s === 'missions' || s === 'how' || s === 'settings' || s === 'results');
+    document.body.classList.toggle('backon', $('back').classList.contains('on'));
+    $('controlsCard').style.display = s === 'title' ? '' : 'none';
+    $('hud').classList.toggle('on', s === 'play' || s === 'pause');
+    $('topBtns').classList.toggle('on', s === 'play');
+    if (s !== 'play') { $('tip').classList.remove('on'); }
+    clearInput();
+    if (s === 'title') paintTitle();
+    if (s === 'how') howT = 0;
+    var first = SCENES[s] && $(SCENES[s]).querySelector('button');
+    if (first && !TOUCH) first.focus({ preventScroll: true });
+  }
+  function goBack() {
+    if (SCENE === 'how' && RUN && RUN.howFromPause) { RUN.howFromPause = false; paintPause(); setScene('pause'); return; }
+    if (SCENE === 'play') { pause(); return; }
+    if (SCENE === 'pause') { resume(); return; }
+    if (SCENE === 'results') { RUN = null; setScene('title'); return; }
+    if (SCENE !== 'title') setScene('title');
+  }
+  $('back').onclick = goBack;
+
+  // ── The First Menu: one big Play button with progress, then one row of at most five, from one array ──
+  var ROW = [
+    { label: 'Flights', act: function () { openMissions(); } },
+    { label: 'How to fly', act: function () { setScene('how'); } },
+    { label: 'Settings', act: function () { openSettings(); } },
+  ];
+  function paintTitle() {
+    var row = $('row5'); row.textContent = '';
+    ROW.filter(function (m) { return !m.when || m.when(); }).forEach(function (m) { var b = el('button', 'btn', m.label); b.setAttribute('role', 'menuitem'); b.onclick = function () { SFX.ui(); m.act(); }; row.appendChild(b); });
+    var pb = $('playBtn'), n = nextMission(), r = SV.run;
+    pb.textContent = '';
+    if (r && r.n >= 1 && r.n <= 16) { pb.appendChild(document.createTextNode((r.n === 16 ? 'Continue · ' : 'Continue · Mission ' + r.n + ' · ') + mName(r.n))); pb.appendChild(el('small', null, 'flight ' + (r.k + 1) + ' of 3 · ' + r.res.filter(function (x) { return x === 'hit'; }).length + ' bound')); }
+    else if (clearedCount() >= 15) { pb.appendChild(document.createTextNode('Fly · Night Shamal')); pb.appendChild(el('small', null, 'The top tier: the Golden Hood is yours')); }
+    else { pb.appendChild(document.createTextNode('Fly · Mission ' + n + ' · ' + mName(n))); pb.appendChild(el('small', null, actOf(n).name + ' · ' + actOf(n).place)); }
+    var st = starTotal(); $('rankB').innerHTML = 'Rank<b></b><i>★ ' + st + '/45</i>'; $('rankB').querySelector('b').textContent = rank();
+    greet(); paintWing();
+  }
+  $('playBtn').onclick = function () {
+    audio(); SFX.ui();
+    if (SV.run && SV.run.n >= 1 && SV.run.n <= 16) { startRun(SV.run.n === 16 ? 'top' : 'mission', SV.run.n, { resume: true }); return; }
+    if (clearedCount() >= 15) { startRun('top', 16, {}); return; }
+    startRun('mission', nextMission(), {});
+  };
+  function paintWing() {
+    var cv = $('wingCv'), r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+    if (!r.width) return;
+    cv.width = r.width * d; cv.height = r.height * d;
+    var x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0);
+    var got = 0; for (var i = 1; i <= 15; i++) if (SV.feathers[i]) got++;
+    $('wingLbl').textContent = 'The wing ' + got + '/15';
+    drawWing(x, r.width, r.height, SV.feathers);
+  }
+
+  // ── The Flights: 15 cards in three rows of five, then the Open Sand, the Daily and the top tier ──
+  function openMissions() {
+    var acts = $('acts'); acts.textContent = '';
+    ACTS.forEach(function (a, ai) {
+      var box = el('div', 'act'); box.appendChild(el('h3', null, 'Act ' + (ai + 1) + ' · ' + a.name + ' — ' + a.place));
+      var g = el('div', 'grid5');
+      for (var k = 1; k <= 5; k++) (function (n) {
+        var sp = Core.mission(n), b = el('button', 'mc' + (k === 5 ? ' final' : '')), done = SV.clears[n] > 0, open = unlocked(n);
+        var hd = el('b', null, n + ' · ' + sp.name + ' '); hd.appendChild(el('span', 'stars', starStr(SV.stars[n]))); b.appendChild(hd);
+        b.appendChild(el('span', null, 'Bind ' + sp.need + ' of 3' + (sp.quarry.indexOf('t') >= 0 ? ' · ' + sp.limit + ' s a flight' : '') + ' · ' + quarryWords(sp.quarry)));
+        if (sp.news) b.appendChild(el('span', 'new', 'New: ' + sp.news));
+        b.appendChild(el('span', 'goal', '★★ 3 of 3 · ★★★ + ' + Core.goalText(n)));
+        b.title = '★ fly the day · ★★ all three bound · ★★★ that plus ' + Core.goalText(n) + ', nothing lost';
+        b.appendChild(el('span', 'st', done ? 'Flown ×' + SV.clears[n] : open ? CHAL[n - 1] : 'Fly mission ' + (n - 1) + ' first'));
+        if (done) b.classList.add('done'); if (n === nextMission() && !done) b.classList.add('next');
+        if (!open) b.disabled = true;
+        b.onclick = function () { SFX.ui(); startRun('mission', n, {}); };
+        g.appendChild(b);
+      })(ai * 5 + k);
+      box.appendChild(g); acts.appendChild(box);
+    });
+    var DR = $('drills'); DR.textContent = '';
+    DR.appendChild(el('span', 'goal', 'The Open Sand · drills:'));
+    DRILLS.forEach(function (d) { if (!drillOpen(d.k)) return; var b = el('button', 'btn', 'Drill · ' + d.name + (SV.drills[d.k] ? ' (' + SV.drills[d.k] + ')' : '')); b.onclick = function () { SFX.ui(); startRun('practice', 0, { drill: d.k }); }; DR.appendChild(b); });
+    var ex = $('extras'); ex.textContent = '';
+    var dly = SV.daily.date === dayKey();
+    [['The Open Sand', 'Practice: fly her at the lure as long as you like.', function () { startRun('practice', 0, {}); }, true],
+     ['Daily Flight', (dly && SV.daily.best != null ? 'Today\'s best: ' + SV.daily.best.toFixed(1) + ' s · ' : '') + 'One seeded houbara, fastest bind. Three tries a day.', function () { startRun('daily', 0, {}); }, !dly || SV.daily.tries < 3],
+     ['Night Shamal', clearedCount() >= 15 ? 'Top tier: bind all three in the night wind, hares, pigeons and both falcons. Won ' + SV.top.wins + ' of ' + SV.top.played : 'Opens after the Golden Hood', function () { startRun('top', 16, {}); }, clearedCount() >= 15]].forEach(function (e) {
+      var b = el('button', 'mc'); b.appendChild(el('b', null, e[0])); b.appendChild(el('span', null, e[1]));
+      b.disabled = !e[3]; b.onclick = function () { SFX.ui(); e[2](); }; ex.appendChild(b);
+    });
+    setScene('missions');
+  }
+  function quarryWords(qs) { var w = { l: 'lure', t: 'far lure', h: 'houbara', p: 'pigeons', r: 'hare' }, seen = []; qs.split('').forEach(function (c) { if (seen.indexOf(w[c]) < 0) seen.push(w[c]); }); return seen.join(', '); }
+  // A6 · drills on the Open Sand: one per move reached, feedback after every try
+  var DRILLS = [{ k: 'thermal', name: 'Thermal', n: 2 }, { k: 'steep', name: 'Steep stoop', n: 6 }, { k: 'straggler', name: 'Straggler', n: 7 }, { k: 'chase', name: 'Tail chase', n: 11 }];
+  function reached() { var m = 1; for (var n = 1; n <= 15; n++) if (SV.clears[n] > 0) m = n + 1; return Math.min(16, m); }
+  function drillOpen(k) { var d = DRILLS.filter(function (x) { return x.k === k; })[0]; return !!d && reached() >= d.n; }
+  function openSettings() {
+    var L = $('setList'); L.textContent = '';
+    function row(label, on, fn) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.checked = on; c.onchange = function () { fn(c.checked); save(); }; l.appendChild(el('span', null, label)); l.appendChild(c); L.appendChild(l); }
+    row('Sound', SV.settings.sound, function (v) { SV.settings.sound = v; setVol(); });
+    row('Reduced motion (no slow-motion, no camera dive, no shake)', reduced(), function (v) { SV.settings.motion = v ? 'reduced' : 'full'; document.body.classList.toggle('rm', v); });
+    row('Show Uncle Rashid\'s tips again', SV.settings.tips, function (v) { SV.settings.tips = v; if (v) SV.taught = {}; });
+    setScene('settings');
+  }
+  function paintPause() {
+    var L = $('pauseList'); L.textContent = '';
+    [['Resume', function () { resume(); }, 'hot'], ['How to fly', function () { RUN.howFromPause = true; setScene('how'); }],
+     ['Leave the sand', function () { quitRun(); }]].forEach(function (e) { var b = el('button', 'btn' + (e[2] ? ' ' + e[2] : ''), e[0]); b.onclick = e[1]; L.appendChild(b); });
+  }
+
+  // ══ The day: a mission is three flights on one ticket ═════════════════════════════════════════════════════════
+  var RUN = null;
+  function specOf(kind, n, drill) {
+    if (kind === 'mission' || kind === 'top') return Core.mission(n);
+    if (kind === 'practice' && drill) {   // a drill: one move, the same kind of flight again and again
+      var D = Core.mission({ thermal: 2, steep: 6, straggler: 7, chase: 12 }[drill]);
+      D.name = 'Drill · ' + DRILLS.filter(function (x) { return x.k === drill; })[0].name; D.n = 0; D.need = 0; D.limit = 40; D.gusts = 0; D.palms = 0; D.partner = false; D.adapt = false; D.shift = false;
+      D.quarry = drill === 'thermal' ? 'l' : drill === 'straggler' ? 'p' : 'h'; D.th = drill === 'thermal' ? 2 : D.th; D.hSpeed = drill === 'chase' ? 38 : 44; D.stam = drill === 'thermal';
+      D.tech = { thermal: true, steep: true, chase: true }; D.drill = drill;
+      return D;
+    }
+    if (kind === 'practice') { var p = Core.mission(1); p.name = 'The Open Sand'; p.quarry = 'llh'; p.hSpeed = 36; p.need = 0; p.limit = 40; p.n = 0; p.gusts = 1; p.gustPow = 45; return p; }
+    var s = Core.hash('falcon-daily-' + dayKey()), d = Core.mission(4 + (s % 9));   // the Daily: one seeded houbara on a seeded sand
+    d.name = 'Daily Flight · ' + dayKey(); d.quarry = 'h'; d.need = 1; d.n = 0; d.limit = 30; d.daySeed = s; if (!d.hSpeed) d.hSpeed = 44;
+    return d;
+  }
+  function caught() { return RUN ? RUN.res.filter(function (x) { return x === 'hit'; }).length : 0; }
+  function startRun(kind, n, o) {
+    if (kind === 'mission' && !unlocked(n) && !(o && o.debug)) { toast('Fly mission ' + (n - 1) + ' first'); return; }
+    if (kind === 'daily' && SV.daily.date === dayKey() && SV.daily.tries >= 3) { toast('Three tries a day — back tomorrow'); return; }
+    o = o || {};
+    audio();
+    var spec = specOf(kind, n, o.drill), resume = !!(o.resume && seasonKind(kind) && SV.run && SV.run.n === n);
+    var seed = resume ? SV.run.seed : kind === 'daily' ? spec.daySeed : (Date.now() ^ (Math.random() * 1e9)) >>> 0;
+    if (!resume && seasonKind(kind)) SV.run = null;
+    RUN = { kind: kind, n: n, spec: spec, seed: seed, k: resume ? SV.run.k : 0, res: resume ? SV.run.res.slice() : [], deaths: resume ? SV.run.deaths | 0 : 0, t: resume ? +SV.run.t || 0 : 0,
+      recalls: 0, phase: 'intro', wait: 1.5, F: null, done: false, draft: null, slow: 1, slowHeld: 0, gustSaid: {}, flapT: 0,
+      stats: { maxAlt: 0, closest: null, fastest: null, names: [] }, ret: null, away: 0, lastWhy: '', debug: !!o.debug, ticketAt: performance.now(),
+      tech: Core.techZero(), hab: { slant: 0, steep: 0 }, drill: o.drill || null, dTry: 0, dOk: 0, stars: 0 };
+    if (kind === 'daily') { if (SV.daily.date !== dayKey()) { SV.daily = { date: dayKey(), best: null, tries: 0 }; } SV.daily.tries++; save(); }
+    newFlight(true);
+    setScene('play'); fit(); groundKey = '';
+    CAM.z = CAM.tz = 1; CAM.x = CAM.tx = Core.FW / 2; CAM.y = CAM.ty = Core.FH / 2;
+    paintBoard();
+    var a = actOf(Math.max(1, n));
+    if (R0drill(o)) call(DRILL_SAY[o.drill]); else call(kind === 'practice' ? 'The open sand. Fly her as much as you like.' : kind === 'daily' ? 'One houbara. Bind to it as fast as you can.' : kind === 'top' ? 'Night Shamal. All three, in the dark wind.' : a.name + ' — ' + spec.name + '. Bind ' + spec.need + ' of 3.');
+    saveRun();
+  }
+  /** The season: the 15 Flights and Night Shamal (16) are saved mid-day and resume after a reload. The Open Sand, the drills and the Daily are not. */
+  function seasonKind(k) { return k === 'mission' || k === 'top'; }
+  function R0drill(o) { return !!(o && o.drill); }
+  var DRILL_SAY = { thermal: 'Drill · thermal: end her line inside the shimmering ring and let her circle up past 120.', steep: 'Drill · steep stoop: fly right over the houbara, then tap and hold.',
+    straggler: 'Drill · straggler: stoop on the ringed pigeon trailing the flock, not into the middle.', chase: 'Drill · tail chase: low behind the houbara, heading at it, hold to run it down.' };
+  /** A6: what the drill try did and one thing to fix. */
+  function drillFeedback(F) {
+    var R = RUN, k = R.drill, S = F.strike || {}, ok = false, line = '';
+    if (k === 'thermal') { ok = F.thRides > 0 && R.stats.maxAlt >= 120; line = ok ? 'Up to ' + Math.round(R.stats.maxAlt) + ' m on the thermal.' : F.thRides ? 'She rode it to ' + Math.round(R.stats.maxAlt) + ' m: stay in it longer, past 120.' : 'She never rode it: end her line inside the ring and let her circle.'; }
+    else if (k === 'steep') {
+      ok = S.hit && S.steep;
+      if (ok) line = 'Vertical stoop! ' + Math.round(S.d) + ' m from the centre of a ' + Math.round(S.r) + ' m ring.';
+      else if (S.steep) line = (F.why === 'short' ? 'Short by ' : 'Over by ') + Math.max(1, Math.round(S.d - S.r)) + ' m: start it with the gold ring on the houbara.';
+      else if (F.strike) line = R.lastGap != null && R.lastGap < 1200 ? 'That was a slanting stoop: your second press came ' + Math.round(R.lastGap) + ' ms after the first. Under 350 ms.' : 'That was a slanting stoop: tap, then hold.';
+      else line = 'No stoop. Fly over it, then tap and hold.';
+    }
+    else if (k === 'straggler') { ok = !!S.straggler; line = ok ? 'The straggler!' : S.confused ? 'Into the heart of the flock: she could not pick one. Aim at the ringed bird.' : S.hit ? 'A bird from the flock: fine, but the straggler is the sure one.' : 'Missed the flock: start the stoop as the ring sits on the straggler.'; }
+    else if (k === 'chase') { ok = !!S.chase; line = ok ? 'Tail chase! Run down in ' + (CHASE_T0 - Math.max(0, F.f.chaseT)).toFixed(1) + ' s.' : F.f.chased ? 'The chase ran out: start it closer (under 130 m) and heading straight at it.' : 'No chase: get under 35 m, close behind it, then hold.'; }
+    R.dTry++; if (ok) R.dOk++;
+    SV.drills[k] = R.dOk + '/' + R.dTry; save();
+    toast((ok ? '✓ ' : '✗ ') + line + ' (' + R.dOk + ' of ' + R.dTry + ')', 4200);
+  }
+  var CHASE_T0 = 1.8;
+  /** Set up flight RUN.k (fresh = straight from the start; otherwise she flies back to the glove first). */
+  function newFlight(fresh) {
+    var R = RUN, prev = R.F;
+    R.F = Core.newFlight(R.spec, R.kind === 'practice' ? R.k % 3 : R.k, (R.seed + R.k * 1013 + R.recalls * 7919) >>> 0, R.hab);
+    R.draft = null; R.gustSaid = {}; R.stoopT = 0; R.slowmo = 0;
+    if (!fresh && prev) { R.ret = { x: prev.f.x, y: prev.f.y, t: 0 }; R.phase = 'return'; R.wait = 1.4; }
+    else { R.ret = null; R.phase = 'intro'; R.wait = 1.4; }
+    paintBoard();
+  }
+  function saveRun() {
+    var R = RUN; if (!R || !seasonKind(R.kind) || R.done) return;
+    SV.run = { n: R.n, k: R.k, res: R.res.slice(), deaths: R.deaths, t: Math.round(R.t * 10) / 10, seed: R.seed };
+    save();
+  }
+  /** A death: a quarry that escaped. Written to the save at once, so a reload never comes back clean. */
+  function death() { if (!RUN || RUN.kind === 'practice') return; RUN.deaths++; saveRun(); }
+
+  function enterPlan() {
+    var R = RUN; R.phase = 'plan';
+    call(pick(UR.plan));
+    if (R.kind === 'mission' && R.n === 1 && R.k === 0) tipOnce('draw', TOUCH ? 'Drag from your falcon to the swinging lure: that is her line. Lift your finger and she is cast off.' : 'Drag from your falcon (bottom middle) to the swinging lure: that is her line. Let go and she is cast off.');
+    else if (R.spec.quarry.charAt(R.k) === 'h' && !SV.taught.habara) tipOnce('habara', 'A houbara (habara). It sits until she is cast, then runs for the dunes. Lead it: draw her line to where it is going.');
+    else if (R.spec.palms && !SV.taught.palms) tipOnce('palms', 'Under the date palms the houbara is safe — she cannot follow into the fronds. Stoop when it is in the open.');
+    else if (R.spec.quarry.charAt(R.k) === 't' && !SV.taught.race) tipOnce('race', 'The telwah race: the lure is far out and the clock is running. Draw her straight and stoop high.');
+  }
+  // ── The tick: the core steps at 120 Hz; slow motion on the best moment ──
+  var STEP = 1 / 120, acc = 0;
+  function tick(dt) {
+    var R = RUN; if (!R || R.done) return;
+    if (SCENE !== 'play') return;
+    var F = R.F, sm = R.slowmo > 0 && !reduced() ? 0.28 : 1;
+    if (R.slowmo > 0) R.slowmo -= dt;
+    var gdt = dt * sm;
+    if (R.phase !== 'intro') R.t += dt;
+    if (R.phase === 'intro' || R.phase === 'return') {
+      R.wait -= dt;
+      if (R.ret) R.ret.t = clamp(1 - R.wait / 1.4, 0, 1);
+      Core.step(F, gdt, {});   // the lure swings while she comes in
+      if (R.wait <= 0) { R.ret = null; enterPlan(); }
+      return;
+    }
+    if (R.phase === 'strike' || R.phase === 'after' || R.phase === 'away') {
+      R.wait -= gdt;
+      if (R.phase === 'away') awayStep(gdt);
+      if (R.wait <= 0) { if (R.phase === 'strike') { R.phase = 'after'; R.wait = 2.2; } else flightDone(); }
+      return;
+    }
+    if (R.phase !== 'plan' && R.phase !== 'fly') return;
+    var inp = { stoop: stoopHeld(), steep: steepHeld() };
+    acc += gdt;
+    var n = 0;
+    while (acc >= STEP && n < 40) {
+      acc -= STEP; n++;
+      var evs = Core.step(F, STEP, inp);
+      for (var i = 0; i < evs.length; i++) onEvent(evs[i]);
+      if (F.over || R.phase !== 'fly' && R.phase !== 'plan') { acc = 0; break; }
+    }
+    if (F.f.mode === 'fly' || F.f.mode === 'stoop') {
+      R.stats.maxAlt = Math.max(R.stats.maxAlt, F.f.alt);
+      if (F.f.mode === 'fly' && !F.f.wait && (R.flapT -= gdt) <= 0) { R.flapT = 0.32; SFX.flap(); }
+      // the slow-down on the best moment: the last instants of a stoop that is going to bind
+      if (F.f.mode === 'stoop' && F.f.alt < Core.STOOP_MIN * 0.6 && R.slowmo <= 0 && !R.smUsed) {
+        var d = Core.dist(F.f, F.q), r = Core.strikeR(F.f.alt0, F.q.kind, R.spec.ease);
+        if (d < r * 1.6 + F.f.s * F.f.alt / 70) { R.slowmo = 0.5; R.smUsed = true; }
+      }
+      if (R.phase === 'fly' && F.f.mode === 'fly' && F.f.alt >= Core.STOOP_MIN && R.kind === 'mission' && R.n === 1 && R.k === 0) tipOnce('stoop', TOUCH ? 'She is high enough. When the little ring ahead of her sits on the lure, HOLD STOOP. Let go to pull out.' : 'She is high enough. When the little ring ahead of her sits on the lure, HOLD Space (or hold the mouse still). Let go to pull out.');
+    }
+    var soon = Core.gustSoon(F);
+    if (soon > 0) for (var g = 0; g < F.gusts.length; g++) if (!R.gustSaid[g] && F.gusts[g].t0 - F.t <= 2 && F.gusts[g].t0 > F.t) { R.gustSaid[g] = 1; call(pick(UR.gust)); if (!SV.taught.shamal) tipOnce('shamal', 'The shamal: sand streams across the dunes the way the wind will push her. Draw her line into it.'); }
+    if (R.phase === 'fly' && F.f.mode === 'fly' && F.f.alt < Core.STOOP_MIN && stoopHeld() && (R.lowSaid = (R.lowSaid || 0) - dt) < 0) { R.lowSaid = 1.5; call(R.spec.tech && R.spec.tech.chase ? 'Too low to stoop — get close behind it and hold for a tail chase.' : 'Too low — let her climb to ' + Core.STOOP_MIN + '.'); }
+    if (Core.shiftSoon(F) > 0 && !R.shiftSaid) { R.shiftSaid = F; call('The wind is turning! Watch the rose.'); }
+    if (R.phase === 'fly' && F.f.mode === 'fly' && F.thermals && F.thermals.length && R.spec.tech && R.spec.tech.thermal && F.f.alt < 60) tipOnce('thermal', 'A thermal: the shimmering ring is rising air. End her line inside it and she circles up three times as fast, past 110.');
+    if (R.phase === 'fly' && R.spec.tech && R.spec.tech.steep && F.f.alt >= 45 && R.kind !== 'practice') tipOnce('steep', 'New: the STEEP STOOP. Tap, then hold (twice quickly): she falls almost straight down onto the small gold ring. Too quick for a jink.');
+    if (R.phase === 'fly' && F.p && F.p.mode === 'fly') tipOnce('hurra', 'Hurra, your second falcon, flies too. When she stoops the quarry breaks: bind right after her (the gold ring on it) for a one-two.');
+    if (R.phase === 'fly' && R.spec.tech && R.spec.tech.chase && F.f.alt < Core.STOOP_MIN && Core.dist(F.f, F.q) < 160 && R.kind !== 'practice') tipOnce('chase', 'New: the TAIL CHASE. Low, close behind it and heading at it: hold and she runs it down.');
+    if (R.phase === 'fly' && F.q.kind === 'p') tipOnce('pigeons', 'Pigeons: a tight flock confuses her. Stoop on the straggler (the ringed bird trailing behind).');
+    if (R.phase === 'fly' && F.q.kind === 'r') tipOnce('hare', 'A hare: it doubles back under a slanting stoop. Take it with a steep stoop from right above, or a tail chase.');
+    if ((R.beltT = (R.beltT || 0) + dt) > 0.5) { R.beltT = 0; paintBoard(); }
+  }
+  function onEvent(e) {
+    var R = RUN, F = R.F;
+    if (e.k === 'cast') { }
+    else if (e.k === 'flush') { SFX.flush(); call(F.q.kind === 'r' ? 'Arnab! The hare is up!' : 'Habara! It is up and running.'); }
+    else if (e.k === 'thermal') { SFX.thermal(); }
+    else if (e.k === 'thermalRide') { R.tech.thermal++; call('She has the thermal — let her circle up!'); big('THERMAL', 'rising air', 900); }
+    else if (e.k === 'chase') { SFX.stoop(); call('Tail chase! Run it down!'); shake(2); }
+    else if (e.k === 'chaseEnd') { call('She pulls up. Climb again.'); }
+    else if (e.k === 'burst') { SFX.flock(); }
+    else if (e.k === 'double') { SFX.miss(); call('It doubled back!'); }
+    else if (e.k === 'pstoop') { SFX.bells(3); }
+    else if (e.k === 'prake') { call('Hurra puts it in — now!'); }
+    else if (e.k === 'stoop') { SFX.stoop(); R.stoopT = 0; R.smUsed = false; shake(2); R.lastGap = IN.gap; if (e.steep) { call('Vertical!'); SV.taught.steep = 1; } }
+    else if (e.k === 'pullout') { call('She pulls out. Climb again.'); }
+    else if (e.k === 'hide') { call(pick(UR.hid)); }
+    else if (e.k === 'strike') strike(e);
+    else if (e.k === 'tired' || e.k === 'edge') escape(e.k);
+  }
+  function strike(e) {
+    var R = RUN, F = R.F;
+    if (e.hit) {
+      R.res[R.k] = 'hit'; R.phase = 'strike'; R.wait = 0.9; R.slowmo = Math.max(R.slowmo, 0.6);
+      var firstWow = R.kind === 'mission' && R.n === 1 && caught() === 1 && !SV.clears[1];
+      var names = Core.scoreStrike(F, R.tech);
+      R.stats.names = R.stats.names.concat(names);
+      var ft = F.t - F.castT; R.stats.fastest = R.stats.fastest == null ? ft : Math.min(R.stats.fastest, ft);
+      R.stats.closest = R.stats.closest == null ? F.strike.d : Math.min(R.stats.closest, F.strike.d);
+      SFX.hit(true); burstFx(F.f.x, F.f.y, F.q.kind === 'h' ? 'feather' : 'sand', firstWow ? 70 : 34); shake(firstWow ? 9 : 5); flash = firstWow ? 1 : 0.6;
+      var lost = F.q.kind === 'h' ? 'ringed and let go' : F.q.kind === 'r' ? 'the hare, ringed and let go' : F.q.kind === 'p' ? 'a pigeon, back to its loft' : 'on the telwah';
+      if (firstWow) big('SAQR!', 'Ma sha Allah — she bound to the telwah', 2600);
+      else big(names[0] ? names[0].replace('!', '').toUpperCase() : 'BOUND!', names.length ? names.slice(1).join(' · ') || lost : lost, 1700);
+      call(F.q.kind === 'l' ? pick(UR.hit) : pick(UR.hitH));
+      if (R.drill) drillFeedback(F);
+      if (actOf(Math.max(1, R.n)).look === 'dusk' || firstWow) SFX.crowd();
+      if (R.kind === 'daily') { R.dailyT = ft; }
+      saveRun();
+    } else {
+      SFX.miss(); burstFx(F.f.x, F.f.y, 'sand', 24); shake(3);
+      escape(F.why);
+    }
+  }
+  function escape(why) {
+    var R = RUN;
+    if (R.drill) drillFeedback(R.F);
+    R.lastWhy = why; R.res[R.k] = 'miss'; R.phase = 'away'; R.wait = 1.3; R.awayV = null;
+    call(pick(UR[why] || UR.edge));
+    if (R.kind !== 'practice') { death(); teach(why); }
+    big(why === 'tired' ? 'CALLED BACK' : why === 'edge' ? 'AWAY!' : 'MISSED', why === 'flock' ? 'lost in the flock' : why === 'hid' ? 'under the palms' : why === 'short' ? 'she landed short' : why === 'over' ? 'she overshot' : why === 'tired' ? (R.spec.quarry.charAt(R.k) === 't' ? 'out of time' : 'she is tired') : 'over the dunes', 1300);
+  }
+  function awayStep(dt) {   // the quarry gets clear: the houbara runs, the lure is pulled in
+    var R = RUN, q = R.F.q;
+    if (q.kind === 'h') { var a = Math.atan2(q.y - R.F.f.y, q.x - R.F.f.x); q.x += Math.cos(a) * 160 * dt; q.y += Math.sin(a) * 160 * dt; }
+    else { q.cx += (500 - q.cx) * dt; q.rx *= 1 - dt; q.ry *= 1 - dt; q.t += dt; q.x = q.cx + q.rx * Math.sin(q.ph + q.w * q.t); q.y = q.cy + q.ry * Math.sin(2 * (q.ph + q.w * q.t)) * 0.5; }
+  }
+  function flightDone() {
+    var R = RUN; if (!R || R.done) return;
+    if (R.kind === 'practice') { R.k++; newFlight(false); return; }
+    if (R.kind === 'daily') { finishRun(); return; }
+    var hits = caught(), left = 2 - R.k;
+    if (R.k >= 2 || hits + left < R.spec.need) { finishRun(); return; }
+    R.k++; newFlight(false); saveRun();
+  }
+  // ── Teaching after a miss: one line, at most twice per cause ──
+  var TEACH = { short: 'She landed short: start the stoop when the ring ahead of her sits on the quarry — or let her climb higher first.',
+    over: 'She overshot: the stoop carries far from high up. Start it sooner, while the quarry is still near the ring.',
+    hid: 'Under the palms the houbara is safe. Wait until it runs into the open, then stoop.',
+    tired: 'She tired before the bind: draw a shorter line, straight to where the quarry is going.',
+    edge: 'It got over the dunes: cast her sooner and lead it — draw her line ahead of the houbara.',
+    flock: 'Into the heart of the flock: she could not pick one bird. Stoop on the straggler, the ringed bird trailing behind.' };
+  function teach(cause) { SV.causes[cause] = (SV.causes[cause] | 0) + 1; save(); if (SV.causes[cause] <= 2 && TEACH[cause]) setTimeout(function () { toast(TEACH[cause], 4200); }, 900); }
+  // ── Tips (G2): one at a time, once per save, skippable ──
+  function tipOnce(id, text) {
+    if (!SV.settings.tips || SV.taught[id] || $('tip').classList.contains('on')) return;
+    SV.taught[id] = 1; save();
+    $('tipTxt').textContent = text; $('tip').classList.add('on');
+  }
+  $('tipOk').onclick = function () { $('tip').classList.remove('on'); };
+  $('tipSkip').onclick = function () { SV.settings.tips = false; save(); $('tip').classList.remove('on'); };
+
+  // ── The end of a day ──
+  function finishRun() {
+    var R = RUN; if (!R || R.done) return;
+    R.done = true; R.phase = 'over';
+    var hits = caught(), won = hits >= R.spec.need;
+    if (R.kind === 'daily') {
+      won = R.res[0] === 'hit';
+      if (won && (SV.daily.best == null || R.dailyT < SV.daily.best)) { R.newBest = true; SV.daily.best = Math.round(R.dailyT * 10) / 10; }
+      save();
+    } else if (R.kind === 'top') { SV.top.played++; if (won) SV.top.wins++; save(); }
+    if (R.kind === 'mission' || R.kind === 'top') {
+      R.res2 = { won: won, binds: hits, recalls: R.recalls, deaths: R.deaths, tech: R.tech };
+      R.stars = Core.stars(R.n, R.res2); R.prevStars = SV.stars[R.n] | 0;
+      if (R.stars > R.prevStars) { SV.stars[R.n] = R.stars; save(); }
+    }
+    // A mission's clear and feather (its own `if`: as an `else` of the stars block above it never ran).
+    if (R.kind === 'top') {   // Night Shamal: mission 16
+      SV.run = null;
+      if (won) SV.clears[16] = (SV.clears[16] | 0) + 1;
+      SV.last = { txt: (won ? 'flew ' : 'came home from ') + mName(16) + ' · ' + hits + ' of 3' };
+      save();
+    }
+    if (R.kind === 'mission') {
+      SV.run = null;
+      if (won) {
+        SV.clears[R.n] = (SV.clears[R.n] | 0) + 1; R.newFeather = !SV.feathers[R.n]; SV.feathers[R.n] = 1;
+        R.prevBest = SV.best[R.n]; SV.best[R.n] = Math.min(SV.best[R.n] == null ? 1e9 : SV.best[R.n], Math.round(R.t * 10) / 10);
+      }
+      SV.last = { txt: (won ? 'flew ' : 'came home from ') + mName(R.n) + ' · ' + hits + ' of 3' };
+      save();
+    }
+    showResults(won);
+  }
+  function quitRun() {
+    var R = RUN; if (!R) return;
+    if (seasonKind(R.kind) && !R.done) { SV.run = null; save(); }
+    RUN = null; setScene('title');
+  }
+  function pause() { if (SCENE !== 'play' || !RUN) return; paintPause(); setScene('pause'); }
+  function resume() { if (!RUN) { setScene('title'); return; } setScene('play'); }
+  function showResults(won) {
+    var R = RUN, n = R.n, hits = caught();
+    $('rKick').textContent = 'The Majlis · ' + R.spec.name;
+    $('rTitle').textContent = R.kind === 'daily' ? (won ? 'Bound in ' + R.dailyT.toFixed(1) + ' s' : 'Away today') : won ? (R.kind === 'mission' && n % 5 === 0 ? 'Champion of the sand! ' : 'A good day · ') + hits + ' of 3' : 'Home empty-handed · ' + hits + ' of 3';
+    $('rWhy').textContent = '';
+    if (!(seasonKind(R.kind) && won)) {
+      $('rWhy').textContent = R.kind === 'mission' ? (lossLine() || 'Not enough binds today. The falcon is fine — fly again.') : R.kind === 'daily' ? 'The Daily Flight is for the story in the majlis. ' + (SV.daily.best != null ? 'Today\'s best: ' + SV.daily.best.toFixed(1) + ' s. ' : '') + 'Tries left today: ' + Math.max(0, 3 - SV.daily.tries) + '.' : R.kind === 'top' ? (lossLine() || 'The night wind kept them all.') + ' Won ' + SV.top.wins + ' of ' + SV.top.played + '.' : '';
+    }
+    var fl = $('rFlights'); fl.textContent = '';
+    var cnt = R.kind === 'daily' ? 1 : 3;
+    for (var i = 0; i < cnt; i++) { var s = el('span', R.res[i] === 'hit' ? 'hit' : R.res[i] === 'miss' ? 'miss' : '', 'Flight ' + (i + 1) + ' · ' + (R.res[i] === 'hit' ? 'bound' : R.res[i] === 'miss' ? 'away' : '—')); fl.appendChild(s); }
+    var st = $('rStats'); st.textContent = '';
+    function line(h, b) { var p = el('p', 'rline'); p.appendChild(document.createTextNode(h + ' ')); p.appendChild(el('b', null, b)); st.appendChild(p); }
+    if (R.kind === 'mission' || R.kind === 'top') {
+      var sk = R.stars | 0, sd = el('div', 'rstars', starStr(sk)); if (sk > (R.prevStars | 0)) sd.appendChild(el('small', 'goal ok', ' new!')); st.appendChild(sd);
+      st.appendChild(el('div', 'goal' + (sk >= 1 ? ' ok' : ''), '★ fly the day (bind ' + R.spec.need + ' of 3)'));
+      st.appendChild(el('div', 'goal' + (sk >= 2 ? ' ok' : ''), '★★ all three bound'));
+      st.appendChild(el('div', 'goal' + (sk >= 3 ? ' ok' : ''), '★★★ + ' + Core.goalText(R.n) + ', nothing lost'));
+      st.appendChild(el('div', 'goal', 'Rank: ' + rank() + ' · ★ ' + starTotal() + '/45'));
+    }
+    line('Highest she flew:', Math.round(R.stats.maxAlt) + ' m');
+    if (R.stats.fastest != null) line('Quickest bind:', R.stats.fastest.toFixed(1) + ' s after the cast');
+    if (R.stats.names.length) line('Called out:', R.stats.names.filter(function (x, i, a) { return a.indexOf(x) === i; }).join(' · '));
+    line('The day took:', Math.round(R.t) + ' s');
+    if (R.kind === 'mission' && won) {
+      var p = el('p', 'rline'), now = Math.round(R.t * 10) / 10;
+      if (R.prevBest == null) p.textContent = 'First time on this sand: ' + now.toFixed(1) + ' s.';
+      else { p.appendChild(document.createTextNode('Best ever: ' + R.prevBest.toFixed(1) + ' s → ' + Math.min(R.prevBest, now).toFixed(1) + ' s ')); if (now < R.prevBest) p.appendChild(el('span', 'up', '▲')); }
+      st.appendChild(p);
+      if (R.deaths === 0) line('A clean day:', 'nothing escaped');
+      p = el('p', 'rline'); p.textContent = 'The challenge: bind ' + R.spec.need + ' of 3 — you bound ' + hits + '.'; st.appendChild(p);
+    }
+    var pc = $('rFeather'), px = pc.getContext('2d'); px.clearRect(0, 0, 120, 160);
+    if (R.kind === 'mission') { drawFeather(px, 60, 152, 140, n, won || !!SV.feathers[n], 0); pc.style.display = ''; } else pc.style.display = 'none';
+    $('rVoice').textContent = 'Uncle Rashid: “' + (won ? (R.newFeather ? 'A new feather for her wing. ' : '') + pick(UR.win) : pick(UR.lose)) + '”';
+    var B = $('rBtns'); B.textContent = '';
+    function btn(t, hot, fn) { var b = el('button', 'btn' + (hot ? ' hot' : ''), t); b.onclick = function () { SFX.ui(); fn(); }; B.appendChild(b); }
+    if (R.kind === 'mission' && won && n < 15) btn('Next · ' + mName(n + 1), true, function () { startRun('mission', n + 1, {}); });
+    else if (R.kind === 'mission' && won && n === 15) btn('Night Shamal', true, function () { startRun('top', 16, {}); });
+    if (R.kind !== 'daily' || SV.daily.tries < 3) btn(won ? 'Fly it again' : 'Try again', !won, function () { startRun(R.kind, n, {}); });
+    btn('Flights', false, function () { RUN = null; openMissions(); });
+    setScene('results');
+  }
+  function lossLine() {
+    var R = RUN, c = R.lastWhy || 'edge';
+    SV.causes['r_' + c] = (SV.causes['r_' + c] | 0) + 1; save();
+    return SV.causes['r_' + c] <= 2 ? TEACH[c] : '';
+  }
+
+  // ══ Input: drag = her line · hold = the stoop (Space, the STOOP button, or the mouse held still) ═══════════════
+  var IN = { key: false, btn: false, g: null };
+  function clearInput() { IN.key = false; IN.btn = false; IN.g = null; if (RUN) RUN.draft = null; $('stoopBtn').classList.remove('held'); }
+  function stoopHeld() { return ((IN.key || IN.btn) && performance.now() - (IN.pressT || 0) >= 90) || !!(IN.g && IN.g.hold); }   // 90 ms before a key press counts, so a tap (the first half of a steep stoop) does not dive
+  // the steep stoop: tap, then hold — a press that starts within 350 ms of the last release
+  IN.lastUp = -1e9; IN.steep = false; IN.gap = null;
+  function pressStart() { var now = performance.now(); IN.pressT = now; IN.gap = now - IN.lastUp; IN.steep = IN.gap < 350; }
+  function pressEnd() { IN.lastUp = performance.now(); IN.steep = false; }
+  function steepHeld() { if (IN.key || IN.btn) return IN.steep; if (IN.g && IN.g.hold) return !!IN.g.steepArm; return false; }
+  var cvEl = $('cv');
+  cvEl.addEventListener('pointerdown', function (e) {
+    audio();
+    var R = RUN; if (!R || SCENE !== 'play' || (R.phase !== 'plan' && R.phase !== 'fly')) return;
+    var w = toWorld(e.clientX, e.clientY);
+    IN.g = { id: e.pointerId, sx: e.clientX, sy: e.clientY, t: performance.now(), pts: [w], moved: false, hold: false, steepArm: performance.now() - IN.lastUp < 350 };
+    if (IN.g.steepArm) IN.gap = performance.now() - IN.lastUp;
+    try { cvEl.setPointerCapture(e.pointerId); } catch (er) { /* */ }
+  });
+  cvEl.addEventListener('pointermove', function (e) {
+    var g = IN.g; if (!g || g.id !== e.pointerId || !RUN) return;
+    if (!g.moved && Math.hypot(e.clientX - g.sx, e.clientY - g.sy) > 10 && !g.hold) g.moved = true;
+    if (g.moved) {
+      var w = toWorld(e.clientX, e.clientY), l = g.pts[g.pts.length - 1];
+      if (Core.dist(w, l) > 12) g.pts.push(w);
+      RUN.draft = g.pts;
+    }
+  });
+  function endGesture(e) {
+    var g = IN.g; if (!g || g.id !== e.pointerId) return;
+    IN.g = null; if (!g.moved) pressEnd();
+    var R = RUN; if (!R) return;
+    if (g.moved && g.pts.length >= 2 && (R.phase === 'plan' || R.phase === 'fly') && !R.F.over) {
+      var pts = g.pts.slice(R.F.f.mode === 'glove' && Core.dist(g.pts[0], R.F.f) < 90 ? 1 : 0);
+      var r = Core.setPath(R.F, pts);
+      if (r === 'cast') { onCast(); if (R.kind === 'mission' && R.n === 1 && R.k === 0) setTimeout(function () { tipOnce('climb', 'She climbs as she flies — the gold ring round her is her height. Under ' + Core.STOOP_MIN + ' she cannot stoop. Drag again in the air to change her line.'); }, 1200); }
+    }
+    R.draft = null;
+  }
+  function onCast() { var R = RUN; R.phase = 'fly'; SFX.cast(); call(pick(UR.climb)); $('tip').classList.remove('on'); }
+  cvEl.addEventListener('pointerup', endGesture);
+  cvEl.addEventListener('pointercancel', endGesture);
+  setInterval(function () { var g = IN.g; if (g && !g.moved && !g.hold && RUN && RUN.phase === 'fly' && performance.now() - g.t > 200) g.hold = true; }, 40);
+  var sb = $('stoopBtn');
+  sb.addEventListener('pointerdown', function (e) { e.preventDefault(); audio(); if (!IN.btn) pressStart(); IN.btn = true; sb.classList.add('held'); try { sb.setPointerCapture(e.pointerId); } catch (er) { /* */ } });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (t) { sb.addEventListener(t, function () { if (IN.btn) pressEnd(); IN.btn = false; sb.classList.remove('held'); }); });
+  $('pauseBtn').onclick = function () { pause(); };
+  addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); goBack(); return; }
+    if (e.code === 'KeyP' && (SCENE === 'play' || SCENE === 'pause')) { SCENE === 'play' ? pause() : resume(); return; }
+    if (e.code === 'KeyM') { muted = !muted; setVol(); toast(muted ? 'Sound off' : 'Sound on', 900); return; }
+    if (SCENE !== 'play' || !RUN) return;
+    if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) audio(); if (!IN.key) pressStart(); IN.key = true; return; }
+  });
+  addEventListener('keyup', function (e) { if (e.code === 'Space') { if (IN.key) pressEnd(); IN.key = false; } });
+  addEventListener('blur', clearInput);
+
+  // ── The HUD: the day's three flights, her height, the clock ──
+  function paintBoard() {
+    var R = RUN, b = $('board'); if (!R) return;
+    b.textContent = '';
+    b.appendChild(el('div', 't', R.kind === 'mission' ? R.n + ' · ' + R.spec.name : R.spec.name));
+    var row = el('div', 'row'), fl = el('span', 'fl'), cnt = R.kind === 'practice' ? 0 : R.kind === 'daily' ? 1 : 3;
+    for (var i = 0; i < cnt; i++) { var c = el('i', R.res[i] === 'hit' ? 'hit' : R.res[i] === 'miss' ? 'miss' : i === R.k ? 'now' : ''); fl.appendChild(c); }
+    if (cnt) { row.appendChild(fl); row.appendChild(el('span', null, R.kind === 'daily' ? 'one houbara' : 'bind ' + R.spec.need + ' of 3')); }
+    else row.appendChild(el('span', null, 'flight ' + (R.k + 1) + ' · ' + caught() + ' bound'));
+    b.appendChild(row);
+    var F = R.F, r2 = el('div', 'row');
+    if (F) {
+      var left = Math.max(0, F.limit - F.t);
+      r2.appendChild(el('span', null, 'height ' + Math.round(F.f.alt) + ' m'));
+      if (F.f.mode !== 'glove' && F.stam == null) r2.appendChild(el('span', null, (R.spec.quarry.charAt(R.k) === 't' ? '⏱ ' : 'flight left ') + Math.ceil(left) + ' s'));
+      if (F.stam != null && F.f.mode !== 'glove') { var sb2 = el('span', null, 'stamina '), bar = el('i'); bar.style.cssText = 'display:inline-block;vertical-align:middle;width:60px;height:7px;border-radius:4px;background:linear-gradient(90deg,' + (F.stam < 25 ? '#b8452f' : '#4f8f3a') + ' ' + Math.round(F.stam) + '%,rgba(0,0,0,.15) 0)'; sb2.appendChild(bar); r2.appendChild(sb2); }
+      if (F.f.inTh) r2.appendChild(el('span', null, '↑ thermal'));
+    }
+    b.appendChild(r2);
+  }
+  // ══ Drawing: everything in code — the sand, the palms, the falcon, the houbara, the falconer ═════════════════
+  var cv = $('cv'), ctx = cv.getContext('2d'), VW = 0, VH = 0, DPR = 1;
+  var CAM = { x: 500, y: 320, z: 1, tx: 500, ty: 320, tz: 1, shake: 0, s0: 1 };
+  var FX = [], flash = 0, groundKey = '', GROUND = null, GRES = 1, howT = 0;
+  function fit() {
+    DPR = Math.min(2, devicePixelRatio || 1); VW = innerWidth; VH = innerHeight;
+    cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
+    var portrait = VH > VW * 1.1;
+    CAM.s0 = portrait ? Math.min(VW / 600, VH / 700) : Math.min(VW / 1000, (VH - 20) / 640);
+    if (SCENE === 'title') paintWing();
+  }
+  addEventListener('resize', fit);
+  function viewScale() { return CAM.s0 * CAM.z; }
+  function toScreen(x, y) { var s = viewScale(); return { x: (x - CAM.x) * s + VW / 2, y: (y - CAM.y) * s + VH / 2 }; }
+  function toWorld(sx, sy) { var s = viewScale(); return { x: (sx - VW / 2) / s + CAM.x, y: (sy - VH / 2) / s + CAM.y }; }
+  function shake(v) { if (!reduced()) CAM.shake = Math.max(CAM.shake, v); }
+  function burstFx(x, y, kind, n) {
+    if (reduced()) n = Math.min(n, 6);
+    for (var i = 0; i < n; i++) { var a = Math.random() * TAU, v = 30 + Math.random() * (kind === 'feather' ? 90 : 140); FX.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.8 + Math.random() * (kind === 'feather' ? 1.4 : 0.6), kind: kind, r: Math.random() * TAU, s: 0.6 + Math.random() }); }
+  }
+  var LOOK = {
+    dawn: { a: '#f0cf8f', b: '#d9a35a', lee: 'rgba(150,80,40,', crest: 'rgba(255,240,205,', tint: ['rgba(255,170,140,.16)', 'rgba(255,220,160,0)'], sun: [-0.55, 0.32] },
+    oasis: { a: '#e8c385', b: '#cf9a52', lee: 'rgba(130,80,40,', crest: 'rgba(255,245,215,', tint: ['rgba(255,250,220,.08)', 'rgba(255,250,220,0)'], sun: [-0.2, 0.45] },
+    dusk: { a: '#e0a868', b: '#b9783e', lee: 'rgba(90,40,50,', crest: 'rgba(255,215,170,', tint: ['rgba(120,50,110,.22)', 'rgba(255,140,60,.10)'], sun: [0.6, 0.3] },
+    night: { a: '#8f7c6a', b: '#5d4c42', lee: 'rgba(20,15,30,', crest: 'rgba(220,220,255,', tint: ['rgba(20,30,80,.35)', 'rgba(20,30,80,.2)'], sun: [0.3, 0.3] },
+  };
+  function lookOf(R) { return R && R.kind === 'top' ? 'night' : actOf(R && R.n >= 1 ? R.n : 1).look; }
+  /** The sand, rendered once per act and size: dune ridges with lit faces and lee shadows, ripples, grain. */
+  function buildGround(look) {
+    var L = LOOK[look], res = clamp(CAM.s0 * DPR * 1.3, 0.6, 1.6), W = 1700, H = 1340, c = document.createElement('canvas');
+    c.width = Math.round(W * res); c.height = Math.round(H * res);
+    var x = c.getContext('2d'); x.scale(res, res); x.translate(350, 350);
+    var g = x.createLinearGradient(0, -350, 0, 990); g.addColorStop(0, L.a); g.addColorStop(1, L.b); x.fillStyle = g; x.fillRect(-350, -350, W, H);
+    var o = { rs: 12345 + look.length * 99 }, rr = function () { return Core.rnd(o); };
+    for (var j = 0; j < 11; j++) {
+      var y0 = -300 + j * 120 + rr() * 40, A = 20 + rr() * 30, f = 0.004 + rr() * 0.004, ph = rr() * TAU, f2 = 0.011 + rr() * 0.01, ph2 = rr() * TAU;
+      var ridge = function (X) { return y0 + A * Math.sin(X * f + ph) + 9 * Math.sin(X * f2 + ph2); };
+      // the lee: a shadow falling below the crest
+      x.beginPath(); x.moveTo(-350, ridge(-350));
+      for (var X = -350; X <= 1350; X += 10) x.lineTo(X, ridge(X));
+      for (X = 1350; X >= -350; X -= 10) x.lineTo(X, ridge(X) + 38 + 14 * Math.sin(X * 0.009 + j));
+      x.closePath();
+      var lg = x.createLinearGradient(0, y0 - A, 0, y0 + A + 50); lg.addColorStop(0, L.lee + '.28)'); lg.addColorStop(1, L.lee + '0)'); x.fillStyle = lg; x.fill();
+      // the lit windward face above it
+      x.beginPath(); x.moveTo(-350, ridge(-350));
+      for (X = -350; X <= 1350; X += 10) x.lineTo(X, ridge(X));
+      for (X = 1350; X >= -350; X -= 10) x.lineTo(X, ridge(X) - 60);
+      x.closePath();
+      var cg = x.createLinearGradient(0, y0 - A - 60, 0, y0 + A); cg.addColorStop(0, L.crest + '0)'); cg.addColorStop(1, L.crest + '.30)'); x.fillStyle = cg; x.fill();
+      x.strokeStyle = L.crest + '.55)'; x.lineWidth = 1.6; x.beginPath(); for (X = -350; X <= 1350; X += 10) x.lineTo(X, ridge(X)); x.stroke();
+    }
+    x.lineWidth = 0.8;   // wind ripples
+    for (var k = 0; k < 220; k++) {
+      var rx = -350 + rr() * 1700, ry = -350 + rr() * 1340, len = 30 + rr() * 60;
+      x.strokeStyle = L.lee + (0.07 + rr() * 0.06) + ')'; x.beginPath();
+      for (var u = 0; u <= len; u += 5) x.lineTo(rx + u, ry + Math.sin((rx + u) * 0.12) * 2.2);
+      x.stroke();
+    }
+    for (k = 0; k < 3600; k++) { x.fillStyle = rr() < 0.5 ? L.lee + '.10)' : L.crest + '.14)'; x.fillRect(-350 + rr() * 1700, -350 + rr() * 1340, 1.4, 1.4); }
+    for (k = 0; k < 26; k++) { var bx = -100 + rr() * 1200, by = -100 + rr() * 840; x.fillStyle = 'rgba(40,25,10,.18)'; x.beginPath(); x.ellipse(bx + 5, by + 4, 9, 6, 0, 0, TAU); x.fill(); for (var b2 = 0; b2 < 6; b2++) { x.fillStyle = b2 % 2 ? '#7d8a4a' : '#68753a'; x.beginPath(); x.arc(bx + (rr() - 0.5) * 12, by + (rr() - 0.5) * 9, 3 + rr() * 3, 0, TAU); x.fill(); } }
+    x.fillStyle = 'rgba(120,70,30,.22)'; for (k = 0; k < 40; k++) { var fy = 640 - k * 9, fxx = 470 + Math.sin(k * 0.3) * 30 + (k % 2 ? 5 : -5); x.beginPath(); x.ellipse(fxx, fy, 2.2, 3.4, 0, 0, TAU); x.fill(); }
+    if (look === 'oasis') {   // the falaj: a stone-edged water channel, and green under the palms
+      x.lineCap = 'round';
+      [[12, '#9b8a6a'], [7, '#4f8fb0'], [2.5, 'rgba(220,245,255,.7)']].forEach(function (p) { x.strokeStyle = p[1]; x.lineWidth = p[0]; x.beginPath(); for (var X2 = -350; X2 <= 1350; X2 += 20) x.lineTo(X2, 470 + Math.sin(X2 * 0.006) * 40); x.stroke(); });
+      for (k = 0; k < 40; k++) { var gx = -100 + rr() * 1200, gy = 300 + rr() * 300; var gg = x.createRadialGradient(gx, gy, 0, gx, gy, 50); gg.addColorStop(0, 'rgba(90,130,50,.22)'); gg.addColorStop(1, 'rgba(90,130,50,0)'); x.fillStyle = gg; x.fillRect(gx - 50, gy - 50, 100, 100); }
+    }
+    if (look === 'dusk' || look === 'night') {   // the festival: tents and the crowd behind a rope, both sides of the field
+      [[-40, 30], [968, 30]].forEach(function (p, side) {
+        for (var i = 0; i < 7; i++) {
+          var ty = p[1] + i * 90, tw = 72, th = 56;
+          x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(p[0] + 7, ty + 7, tw, th);
+          for (var s = 0; s < 6; s++) { x.fillStyle = s % 2 ? '#f3e7cf' : (i % 2 ? '#9b2d20' : '#2e4a6b'); x.fillRect(p[0] + s * tw / 6, ty, tw / 6 + 0.5, th); }
+          x.strokeStyle = 'rgba(40,20,10,.5)'; x.lineWidth = 1.5; x.strokeRect(p[0], ty, tw, th);
+          x.fillStyle = '#ffd77a'; x.beginPath(); x.arc(p[0] + (side ? -6 : tw + 6), ty + th / 2, 3, 0, TAU); x.fill();
+        }
+        var rx2 = side ? 940 : 60;
+        for (i = 0; i < 75; i++) { x.fillStyle = ['#fff', '#eee', '#222', '#9b2d20', '#f3e7cf'][i % 5]; x.beginPath(); x.arc(rx2 + (side ? 10 : -10) + (i % 2) * (side ? 8 : -8), 0 + (i / 2 | 0) * 17 + (i % 2) * 6, 3.6, 0, TAU); x.fill(); }
+        x.strokeStyle = '#c9962e'; x.lineWidth = 2; x.beginPath(); x.moveTo(rx2, -100); x.lineTo(rx2, 640); x.stroke();
+      });
+    }
+    return { c: c, res: res };
+  }
+  function ensureGround(look) {
+    var key = look + '|' + Math.round(CAM.s0 * DPR * 100);
+    if (groundKey !== key || !GROUND) { GROUND = buildGround(look); groundKey = key; }
+  }
+
+  // ── The pieces ──
+  /** The falcon from above, facing ang. mode: fly | stoop | glove | bound | ground. */
+  function drawFalconTop(x, px, py, ang, s, mode, t, alt, hood) {
+    x.save(); x.translate(px, py); x.rotate(ang); x.scale(s, s);
+    var back = '#6b4423', dark = '#3a2312', pale = '#b98a5a';
+    if (mode === 'stoop' || mode === 'glove' || mode === 'bound') {
+      var L = mode === 'stoop' ? 1.25 : 1;
+      x.fillStyle = dark; x.beginPath(); x.moveTo(11 * L, 0); x.lineTo(-2, -5.5); x.lineTo(-15 * L, -2); x.lineTo(-15 * L, 2); x.lineTo(-2, 5.5); x.closePath(); x.fill();
+      x.fillStyle = back; x.beginPath(); x.moveTo(9 * L, 0); x.lineTo(-1, -4.2); x.lineTo(-12 * L, -1.2); x.lineTo(-12 * L, 1.2); x.lineTo(-1, 4.2); x.closePath(); x.fill();
+      x.strokeStyle = pale; x.lineWidth = 0.7; for (var b = 0; b < 4; b++) { x.beginPath(); x.moveTo(-2 - b * 2.6, -3 + b * 0.5); x.lineTo(-2 - b * 2.6, 3 - b * 0.5); x.stroke(); }
+    } else {
+      var flap = mode === 'fly' ? Math.sin(t * 13) : 0, sweep = 0.5 + 0.5 * flap, span = 17 - 3 * sweep;
+      [-1, 1].forEach(function (sd) {
+        x.fillStyle = back; x.beginPath(); x.moveTo(3, sd * 2.5); x.quadraticCurveTo(-1, sd * (span * 0.6), -7 - 3 * sweep, sd * span); x.lineTo(-9 - 2 * sweep, sd * (span - 2)); x.quadraticCurveTo(-8, sd * 7, -6, sd * 3); x.closePath(); x.fill();
+        x.strokeStyle = dark; x.lineWidth = 0.8; for (var f = 1; f < 5; f++) { x.beginPath(); x.moveTo(-3 - f * 0.6, sd * (3 + f * 2.6)); x.lineTo(-7 - f * 0.4 - 2 * sweep, sd * (2.5 + f * 3)); x.stroke(); }
+        x.fillStyle = dark; x.beginPath(); x.moveTo(-7 - 3 * sweep, sd * span); x.lineTo(-9 - 2 * sweep, sd * (span - 2)); x.lineTo(-5 - 2 * sweep, sd * (span - 4)); x.closePath(); x.fill();
+      });
+      x.fillStyle = back; x.beginPath(); x.ellipse(-1, 0, 8, 3.6, 0, 0, TAU); x.fill();
+      x.fillStyle = dark; x.beginPath(); x.moveTo(-7, -2.5); x.lineTo(-14, -3.8); x.lineTo(-14, 3.8); x.lineTo(-7, 2.5); x.closePath(); x.fill();
+      x.fillStyle = pale; x.fillRect(-13.5, -3.4, 1, 6.8);
+    }
+    // the head (a hood on the glove)
+    x.fillStyle = '#2a1a0d'; x.beginPath(); x.arc(mode === 'stoop' ? 11 : 7, 0, 2.8, 0, TAU); x.fill();
+    if (hood) { x.fillStyle = hood === 'fine' ? '#9b2d20' : '#6b4a2a'; x.beginPath(); x.arc(7, 0, 3.4, 0, TAU); x.fill(); if (hood === 'fine') { x.strokeStyle = '#e8c35a'; x.lineWidth = 0.7; x.beginPath(); x.arc(7, 0, 2.4, 0, TAU); x.stroke(); } x.fillStyle = hood === 'fine' ? '#e8c35a' : '#3a2312'; x.beginPath(); x.arc(6, 0, 1.2, 0, TAU); x.fill(); }
+    else { x.fillStyle = '#e2b13a'; x.beginPath(); x.arc((mode === 'stoop' ? 11 : 7) + 2.4, 0, 0.9, 0, TAU); x.fill(); }
+    x.restore();
+  }
+  function drawHoubara(x, px, py, ang, s, t, running, hidden) {
+    x.save(); x.translate(px, py); x.rotate(ang); x.scale(s, s); x.globalAlpha = hidden ? 0.35 : 1;
+    var bob = running ? Math.sin(t * 22) * 0.6 : 0;
+    x.fillStyle = '#c9a571'; x.beginPath(); x.ellipse(-1, bob, 8, 5.2, 0, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(70,45,20,.55)'; for (var i = 0; i < 9; i++) { x.beginPath(); x.arc(-6 + (i % 3) * 3.6, -3 + (i / 3 | 0) * 3 + bob, 0.7, 0, TAU); x.fill(); }
+    x.fillStyle = '#efe6d2'; x.beginPath(); x.ellipse(-7, bob, 2.5, 3.6, 0, 0, TAU); x.fill();
+    x.strokeStyle = '#1b130c'; x.lineWidth = 1.6; x.beginPath(); x.moveTo(5, bob); x.lineTo(9, bob); x.stroke();
+    x.fillStyle = '#d8c09a'; x.beginPath(); x.arc(10, bob, 2.2, 0, TAU); x.fill();
+    x.fillStyle = '#fff'; x.beginPath(); x.moveTo(9, bob - 1); x.lineTo(7, bob - 3.5); x.lineTo(10, bob - 1.6); x.fill();
+    x.fillStyle = '#444'; x.fillRect(12, bob - 0.4, 1.6, 0.8);
+    x.restore();
+  }
+  function drawLurePad(x, px, py, r, t) {
+    x.save(); x.translate(px, py); x.rotate(Math.sin(t * 3) * 0.4);
+    x.fillStyle = '#c9a571'; [-1, 1].forEach(function (sd) { x.beginPath(); x.ellipse(0, sd * r * 0.55, r * 0.95, r * 0.42, sd * 0.2, 0, TAU); x.fill(); });
+    x.strokeStyle = 'rgba(70,45,20,.6)'; x.lineWidth = Math.max(0.6, r * 0.06); [-1, 1].forEach(function (sd) { for (var i = -2; i <= 2; i++) { x.beginPath(); x.moveTo(i * r * 0.3, sd * r * 0.2); x.lineTo(i * r * 0.35, sd * r * 0.85); x.stroke(); } });
+    x.fillStyle = '#5a3418'; x.beginPath(); x.ellipse(0, 0, r * 0.6, r * 0.42, 0, 0, TAU); x.fill();
+    x.restore();
+  }
+  function drawGlove(x, cx, cy, r) {
+    x.save(); x.fillStyle = '#8a5a30'; x.strokeStyle = '#3d250f'; x.lineWidth = Math.max(1, r * 0.08);
+    x.beginPath(); x.moveTo(cx - r * 0.9, cy + r * 0.9); x.lineTo(cx - r * 0.5, cy - r * 0.2); x.quadraticCurveTo(cx - r * 0.2, cy - r * 0.9, cx + r * 0.35, cy - r * 0.75); x.quadraticCurveTo(cx + r * 0.85, cy - r * 0.5, cx + r * 0.6, cy); x.lineTo(cx + r * 0.25, cy + r * 0.9); x.closePath(); x.fill(); x.stroke();
+    x.strokeStyle = '#e8c35a'; x.lineWidth = Math.max(1, r * 0.06); x.beginPath(); x.moveTo(cx - r * 0.7, cy + r * 0.45); x.lineTo(cx + r * 0.38, cy + r * 0.45); x.stroke();
+    x.restore();
+  }
+  function drawDallah(x, cx, cy, r) {   // the brass coffee pot with its crescent spout
+    x.save(); var g = x.createLinearGradient(cx - r, 0, cx + r, 0); g.addColorStop(0, '#8a6417'); g.addColorStop(0.5, '#f0cf6a'); g.addColorStop(1, '#8a6417');
+    x.fillStyle = g; x.strokeStyle = '#5a3f0c'; x.lineWidth = Math.max(1, r * 0.05);
+    x.beginPath(); x.moveTo(cx - r * 0.45, cy + r * 0.6); x.quadraticCurveTo(cx - r * 0.6, cy, cx - r * 0.25, cy - r * 0.25); x.lineTo(cx - r * 0.18, cy - r * 0.55); x.lineTo(cx + r * 0.18, cy - r * 0.55); x.lineTo(cx + r * 0.25, cy - r * 0.25); x.quadraticCurveTo(cx + r * 0.6, cy, cx + r * 0.45, cy + r * 0.6); x.closePath(); x.fill(); x.stroke();
+    x.beginPath(); x.moveTo(cx + r * 0.3, cy - r * 0.05); x.quadraticCurveTo(cx + r * 0.7, cy - r * 0.2, cx + r * 0.8, cy - r * 0.7); x.lineTo(cx + r * 0.7, cy - r * 0.68); x.quadraticCurveTo(cx + r * 0.6, cy - r * 0.25, cx + r * 0.3, cy + r * 0.1); x.fill(); x.stroke();
+    x.beginPath(); x.moveTo(cx - r * 0.12, cy - r * 0.55); x.lineTo(cx, cy - r * 0.85); x.lineTo(cx + r * 0.12, cy - r * 0.55); x.fill(); x.stroke();
+    x.restore();
+  }
+  /** The burqa, side on: leather, the gold-thread embroidery and the plume (fine) — or the plain working hood. */
+  function drawHood(x, cx, cy, r, fine) {
+    x.save();
+    x.fillStyle = fine ? '#9b2d20' : '#6b4a2a'; x.strokeStyle = '#2b1a0c'; x.lineWidth = Math.max(1, r * 0.05);
+    x.beginPath(); x.moveTo(cx - r * 0.7, cy + r * 0.45); x.quadraticCurveTo(cx - r * 0.75, cy - r * 0.5, cx, cy - r * 0.55); x.quadraticCurveTo(cx + r * 0.75, cy - r * 0.45, cx + r * 0.85, cy + r * 0.2); x.lineTo(cx + r * 0.35, cy + r * 0.45); x.closePath(); x.fill(); x.stroke();
+    if (fine) {
+      x.strokeStyle = '#e8c35a'; x.lineWidth = Math.max(1, r * 0.05);
+      x.beginPath(); x.arc(cx + r * 0.1, cy, r * 0.28, 0, TAU); x.stroke();
+      for (var i = 0; i < 6; i++) { var a = i / 6 * TAU; x.beginPath(); x.moveTo(cx + r * 0.1 + Math.cos(a) * r * 0.12, cy + Math.sin(a) * r * 0.12); x.lineTo(cx + r * 0.1 + Math.cos(a) * r * 0.24, cy + Math.sin(a) * r * 0.24); x.stroke(); }
+      x.beginPath(); x.moveTo(cx - r * 0.6, cy + r * 0.38); x.lineTo(cx + r * 0.3, cy + r * 0.38); x.stroke();
+      x.fillStyle = '#e8c35a'; x.fillRect(cx - r * 0.05, cy - r * 0.62, r * 0.12, r * 0.12);
+      x.strokeStyle = '#3d250f'; x.lineWidth = Math.max(1, r * 0.09); x.beginPath(); x.moveTo(cx, cy - r * 0.58); x.quadraticCurveTo(cx - r * 0.1, cy - r * 1.05, cx - r * 0.35, cy - r * 1.15); x.stroke();
+      x.strokeStyle = '#8a5a30'; x.lineWidth = Math.max(1, r * 0.05); for (var k = 0; k < 5; k++) { x.beginPath(); x.moveTo(cx - r * 0.06 * k, cy - r * (0.75 + k * 0.08)); x.lineTo(cx - r * (0.12 + k * 0.06), cy - r * (0.7 + k * 0.1)); x.stroke(); }
+    } else { x.strokeStyle = '#3a2312'; x.lineWidth = Math.max(1, r * 0.08); x.beginPath(); x.moveTo(cx, cy - r * 0.55); x.lineTo(cx - r * 0.05, cy - r * 0.8); x.stroke(); }
+    x.restore();
+  }
+  /** The falcon on a perch or the glove, side on (the First Menu). */
+  function drawGloveFalcon(x, cx, cy, s, hooded, t) {
+    x.save(); x.translate(cx, cy); x.scale(s, s);
+    var br = reduced() ? 0 : Math.sin(t * 1.6) * 0.6;
+    x.fillStyle = '#3a2312'; x.beginPath(); x.moveTo(-4, 14); x.lineTo(-10, 34); x.lineTo(-2, 34); x.lineTo(2, 16); x.fill();   // tail
+    var g = x.createLinearGradient(-12, -20, 12, 20); g.addColorStop(0, '#7a5030'); g.addColorStop(1, '#4a2e17');
+    x.fillStyle = g; x.beginPath(); x.ellipse(0, 2 + br * 0.3, 11, 17, 0.15, 0, TAU); x.fill();   // body
+    x.fillStyle = '#e9dcc4'; x.beginPath(); x.ellipse(4, 4 + br * 0.3, 6.5, 12, 0.15, -1.2, 1.9); x.fill();   // the pale breast
+    x.fillStyle = 'rgba(60,35,15,.7)'; for (var i = 0; i < 10; i++) { x.beginPath(); x.ellipse(3 + (i % 2) * 3, -3 + i * 1.8, 1.4, 0.6, 0, 0, TAU); x.fill(); }
+    x.fillStyle = '#3a2312'; x.beginPath(); x.ellipse(-4, 2, 8, 15, 0.25, 0, TAU); x.fill();   // the folded wing
+    x.strokeStyle = 'rgba(200,160,110,.6)'; x.lineWidth = 0.8; for (i = 0; i < 4; i++) { x.beginPath(); x.moveTo(-9, -4 + i * 5); x.lineTo(-1, -1 + i * 5); x.stroke(); }
+    x.fillStyle = '#e2b13a'; x.fillRect(-3, 18, 2.4, 6); x.fillRect(2, 18, 2.4, 6);   // the feet
+    x.fillStyle = '#2a1a0d'; x.beginPath(); x.arc(3, -17 + br * 0.2, 7.5, 0, TAU); x.fill();   // the head
+    x.fillStyle = '#e2b13a'; x.beginPath(); x.moveTo(9, -17); x.quadraticCurveTo(13, -16, 10.5, -13); x.lineTo(9, -14); x.fill();
+    if (hooded) drawHood(x, 3, -18 + br * 0.2, 9, hooded === 'fine');
+    else { x.fillStyle = '#f6e7c8'; x.beginPath(); x.arc(5.5, -18, 2, 0, TAU); x.fill(); x.fillStyle = '#111'; x.beginPath(); x.arc(6, -18, 1.2, 0, TAU); x.fill(); }
+    // the bells and jesses
+    x.strokeStyle = '#3d250f'; x.lineWidth = 1; x.beginPath(); x.moveTo(0, 23); x.quadraticCurveTo(-2, 30, -6, 33); x.stroke(); x.fillStyle = '#d9a93a'; x.beginPath(); x.arc(-6, 34, 1.8, 0, TAU); x.fill();
+    x.restore();
+  }
+  function drawFalconer(x, gx, gy, s, t) {   // from above: white kandura, the ghutra falling over the shoulders with the black agal, the gloved arm out
+    x.save(); x.translate(gx + 24 * s, gy + 22 * s); x.scale(s, s);
+    x.fillStyle = 'rgba(40,20,5,.22)'; x.beginPath(); x.ellipse(8 + LOOKSH[0] * -10, 10, 24, 16, 0, 0, TAU); x.fill();
+    var g = x.createRadialGradient(-4, -4, 2, 0, 0, 22); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#d9d4c8');
+    x.fillStyle = g; x.beginPath(); x.ellipse(0, 2, 21, 12, 0, 0, TAU); x.fill();
+    x.strokeStyle = '#ece8de'; x.lineWidth = 7; x.lineCap = 'round'; x.beginPath(); x.moveTo(-12, -2); x.quadraticCurveTo(-20, -8, -24, -22); x.stroke();
+    x.strokeStyle = 'rgba(0,0,0,.12)'; x.lineWidth = 1; x.beginPath(); x.moveTo(-15, -6); x.quadraticCurveTo(-21, -11, -24, -19); x.stroke();
+    drawGlove(x, -24, -23, 6);
+    var gg = x.createLinearGradient(0, -10, 0, 18); gg.addColorStop(0, '#ffffff'); gg.addColorStop(1, '#e4dfd3');
+    x.fillStyle = gg; x.beginPath(); x.moveTo(-9, -2); x.quadraticCurveTo(-10, 12, -4, 17); x.lineTo(4, 17); x.quadraticCurveTo(10, 12, 9, -2); x.arc(0, -2, 9, 0, Math.PI, true); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.1)'; x.lineWidth = 0.8; [-4, 0, 4].forEach(function (u) { x.beginPath(); x.moveTo(u, 2); x.lineTo(u * 1.2, 16); x.stroke(); });
+    x.strokeStyle = '#151515'; x.lineWidth = 1.7; x.beginPath(); x.arc(0, -2, 5.8, 0, TAU); x.stroke(); x.beginPath(); x.arc(0, -2, 4, 0, TAU); x.stroke();
+    x.restore();
+  }
+  function drawPalm(x, p, t, sway) {
+    x.save(); x.translate(p.x, p.y);
+    x.fillStyle = 'rgba(40,30,10,.22)'; x.beginPath(); x.ellipse(LOOKSH[0] * 30, LOOKSH[1] * 30, p.r * 1.1, p.r * 0.8, 0, 0, TAU); x.fill();
+    x.rotate(sway ? Math.sin(t * 0.9 + p.x) * 0.06 : 0);
+    for (var i = 0; i < 11; i++) {
+      var a = i / 11 * TAU + p.x * 0.01, L = p.r * (0.9 + (i % 3) * 0.12);
+      x.save(); x.rotate(a);
+      x.fillStyle = i % 2 ? '#3f6b2a' : '#4f7d32'; x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(L * 0.5, -L * 0.22, L, 0); x.quadraticCurveTo(L * 0.5, L * 0.22, 0, 0); x.fill();
+      x.strokeStyle = 'rgba(30,50,15,.7)'; x.lineWidth = 1; x.beginPath(); x.moveTo(0, 0); x.lineTo(L, 0); x.stroke();
+      x.restore();
+    }
+    x.fillStyle = '#7a5a2a'; x.beginPath(); x.arc(0, 0, 4, 0, TAU); x.fill();
+    x.fillStyle = '#b5651d'; for (i = 0; i < 4; i++) { x.beginPath(); x.arc(Math.cos(i * 1.7) * 6, Math.sin(i * 1.7) * 6, 2, 0, TAU); x.fill(); }   // the dates
+    x.restore();
+  }
+  var LOOKSH = [-0.5, 0.3];
+  function drawFeather(x, cx, baseY, len, n, got, t) {
+    x.save(); x.translate(cx, baseY); x.rotate(-0.12);
+    var hue = 22 + (n * 7) % 18, w = len * 0.17;
+    x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(-w * 1.25, -len * 0.45, -w * 0.15, -len); x.quadraticCurveTo(w * 1.1, -len * 0.5, 0, 0);
+    if (got) {
+      var g = x.createLinearGradient(-w, 0, w, 0); g.addColorStop(0, 'hsl(' + hue + ',42%,26%)'); g.addColorStop(1, 'hsl(' + hue + ',45%,40%)'); x.fillStyle = g; x.fill();
+      x.save(); x.clip(); x.strokeStyle = 'hsla(' + hue + ',40%,78%,.75)'; x.lineWidth = Math.max(1, len * 0.03);
+      var bars = 4 + n % 4; for (var i = 1; i <= bars; i++) { var yy = -len * (0.15 + 0.8 * i / (bars + 1)); x.beginPath(); x.moveTo(-w * 1.4, yy + w * 0.4); x.quadraticCurveTo(0, yy - w * 0.3, w * 1.4, yy + w * 0.4); x.stroke(); }
+      x.restore();
+    } else { x.setLineDash([3, 3]); x.strokeStyle = 'rgba(107,68,35,.45)'; x.lineWidth = 1; x.stroke(); x.setLineDash([]); }
+    x.strokeStyle = got ? '#efe0c0' : 'rgba(107,68,35,.4)'; x.lineWidth = Math.max(1, len * 0.015); x.beginPath(); x.moveTo(0, len * 0.06); x.quadraticCurveTo(-w * 0.1, -len * 0.5, -w * 0.15, -len * 0.98); x.stroke();
+    x.restore();
+  }
+  /** The keepsake wing: fifteen flight feathers, one for each mission flown. */
+  function drawWing(x, w, h, got) {
+    x.clearRect(0, 0, w, h);
+    var step = (w - 20) / 15;
+    for (var i = 1; i <= 15; i++) { var px = 12 + step * (i - 0.5); drawFeather(x, px, h - 2, h * (0.62 + 0.36 * Math.sin(i / 16 * Math.PI)), i, !!got[i], 0); }
+  }
+
+  // ── The play view ──
+  function drawPlay(dt, t) {
+    var R = RUN, F = R.F, look = lookOf(R), L = LOOK[look];
+    LOOKSH = L.sun;
+    // the camera: the field, and the dive into her eye during a stoop
+    var stooping = F.f.mode === 'stoop' || (R.phase === 'strike' && F.strike && F.strike.hit);
+    var portrait = VH > VW * 1.1;
+    if (stooping && !reduced()) { CAM.tz = 1.9; CAM.tx = F.f.x + Math.cos(F.f.h) * 30; CAM.ty = F.f.y + Math.sin(F.f.h) * 30; }
+    else if (R.phase === 'after' && F.strike && !reduced()) { CAM.tz = 1.35; CAM.tx = F.strike.x; CAM.ty = F.strike.y; }
+    else { CAM.tz = 1; var fx = F.f.mode === 'glove' ? F.q.x : (F.f.x + F.q.x) / 2; CAM.tx = portrait ? clamp(fx, 300, 700) : 500; CAM.ty = portrait ? clamp((F.f.y + F.q.y) / 2, 300, 340) : 320; }
+    var k = reduced() ? 1 : Math.min(1, dt * (stooping ? 5 : 2.5));
+    CAM.z += (CAM.tz - CAM.z) * k; CAM.x += (CAM.tx - CAM.x) * k; CAM.y += (CAM.ty - CAM.y) * k;
+    if (CAM.shake > 0) CAM.shake = Math.max(0, CAM.shake - dt * 14);
+    ensureGround(look);
+    var c = ctx, s = viewScale();
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    c.fillStyle = L.b; c.fillRect(0, 0, VW, VH);
+    var sx = CAM.shake ? (Math.random() - 0.5) * CAM.shake : 0, sy = CAM.shake ? (Math.random() - 0.5) * CAM.shake : 0;
+    c.setTransform(DPR * s, 0, 0, DPR * s, DPR * (VW / 2 - CAM.x * s + sx), DPR * (VH / 2 - CAM.y * s + sy));
+    c.drawImage(GROUND.c, -350, -350, 1700, 1340);
+    var still = reduced() ? 0 : t, q = F.q, sh = L.sun;
+    // thermals: rising air, a shimmer of rings and a slow dust swirl
+    (F.thermals || []).forEach(function (T, ti) {
+      var inT = F.f.inTh && Core.dist(F.f, T) < T.r + 20;
+      for (var rr = 0; rr < 3; rr++) {
+        var ph = ((still * 0.35 + rr / 3) % 1), rad = T.r * (0.35 + 0.65 * ph);
+        c.strokeStyle = 'rgba(255,250,230,' + ((inT ? 0.6 : 0.42) * (1 - ph)) + ')'; c.lineWidth = 2; c.setLineDash([7, 6]); c.lineDashOffset = -still * 20;
+        c.beginPath(); c.arc(T.x, T.y, rad, 0, TAU); c.stroke();
+      }
+      c.setLineDash([]); c.lineDashOffset = 0;
+      c.fillStyle = 'rgba(250,235,200,.5)'; for (var dp = 0; dp < 10; dp++) { var da = still * 1.6 + dp * 0.63, dr = T.r * (0.2 + (dp % 5) * 0.15); c.beginPath(); c.arc(T.x + Math.cos(da) * dr, T.y + Math.sin(da) * dr * 0.8, 1.8, 0, TAU); c.fill(); }
+      c.fillStyle = 'rgba(255,250,235,.75)'; c.font = '600 11px ' + 'Trebuchet MS, sans-serif'; c.textAlign = 'center'; c.fillText('thermal', T.x, T.y + 4); c.textAlign = 'left';
+    });
+    // the falconer and the glove
+    drawFalconer(c, Core.GLOVE.x, Core.GLOVE.y, 1.4, still);
+    // the lure man, swinging the telwah on its line
+    if (q.kind === 'l') {
+      var hx = q.cx, hy = q.cy + 80;
+      c.fillStyle = 'rgba(40,20,5,.25)'; c.beginPath(); c.ellipse(hx + 5, hy + 6, 14, 9, 0, 0, TAU); c.fill();
+      c.fillStyle = '#efe6d6'; c.beginPath(); c.ellipse(hx, hy, 13, 9, 0, 0, TAU); c.fill(); c.fillStyle = '#c23b2a'; c.beginPath(); c.arc(hx, hy, 6, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(40,25,10,.55)'; c.lineWidth = 1; c.beginPath(); c.moveTo(hx, hy - 6); c.quadraticCurveTo((hx + q.x) / 2, (hy + q.y) / 2 + 8, q.x, q.y); c.stroke();
+    }
+    // the quarry's shadow and the quarry
+    var qh = q.kind === 'h' ? q.h : (q.t * q.w);
+    if (q.kind === 'p') { /* the flock flies over the palms: drawn after them */ }
+    else if (q.kind === 'r') { c.fillStyle = 'rgba(40,20,5,.22)'; c.beginPath(); c.ellipse(q.x + 3, q.y + 3, 11, 5, q.h, 0, TAU); c.fill(); drawHare(c, q.x, q.y, q.h, 1.25, still, q.run); if (q.run && !reduced() && Math.random() < 0.35) FX.push({ x: q.x - Math.cos(q.h) * 9, y: q.y - Math.sin(q.h) * 9, vx: 0, vy: 0, life: 0, max: 0.5, kind: 'puff', s: 1 }); }
+    else if (q.kind === 'h') { c.fillStyle = 'rgba(40,20,5,.22)'; c.beginPath(); c.ellipse(q.x + 3, q.y + 3, 9, 5, q.h, 0, TAU); c.fill(); drawHoubara(c, q.x, q.y, q.h, 1.25, still, q.run, q.hidden); if (q.run && !q.hidden && !reduced() && Math.random() < 0.3) FX.push({ x: q.x - Math.cos(q.h) * 8, y: q.y - Math.sin(q.h) * 8, vx: 0, vy: 0, life: 0, max: 0.5, kind: 'puff', r: 0, s: 1 }); }
+    else { c.fillStyle = 'rgba(40,20,5,.2)'; c.beginPath(); c.ellipse(q.x + 4, q.y + 5, 10, 6, 0, 0, TAU); c.fill(); drawLurePad(c, q.x, q.y, 11, still + qh); }
+    // palms over everything on the ground (the houbara hides under them)
+    F.palms.forEach(function (p) { drawPalm(c, p, still, true); });
+    if (q.kind === 'p') drawPigeons(c, q, still, F.f.mode === 'bound');
+    // her line, and the line being drawn
+    if (F.path.length && F.f.mode === 'fly') {
+      c.setLineDash([6, 7]); c.strokeStyle = 'rgba(255,240,200,.8)'; c.lineWidth = 2; c.beginPath(); c.moveTo(F.f.x, F.f.y);
+      for (var i = F.f.pi; i < F.path.length; i++) c.lineTo(F.path[i].x, F.path[i].y); c.stroke(); c.setLineDash([]);
+    }
+    if (R.draft && R.draft.length > 1) { c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); R.draft.forEach(function (p, j) { if (j) c.lineTo(p.x, p.y); else c.moveTo(p.x, p.y); }); c.stroke(); }
+    // where a stoop from here would land: the little ring ahead of her
+    var f = F.f;
+    if (f.mode === 'fly' && R.phase === 'fly') {
+      var rc = Core.reach(f.alt, f.s), ok = f.alt >= Core.STOOP_MIN, rx = f.x + Math.cos(f.h) * rc, ry = f.y + Math.sin(f.h) * rc, rr = Core.strikeR(f.alt, q.kind, R.spec.ease);
+      c.strokeStyle = ok ? 'rgba(255,250,235,.9)' : 'rgba(255,250,235,.35)'; c.lineWidth = ok ? 2 : 1.2; if (!ok) c.setLineDash([3, 4]);
+      c.beginPath(); c.arc(rx, ry, rr, 0, TAU); c.stroke(); c.setLineDash([]);
+      if (ok && Core.dist({ x: rx, y: ry }, q) < rr && !q.hidden) { c.fillStyle = 'rgba(255,250,235,.25)'; c.beginPath(); c.arc(rx, ry, rr, 0, TAU); c.fill(); }
+      if (R.spec.tech && R.spec.tech.steep && f.alt >= Core.STOOP_MIN) {   // the steep stoop lands almost under her: a small gold ring
+        var rcs = Core.reachSteep(f.alt), sxr = f.x + Math.cos(f.h) * rcs, syr = f.y + Math.sin(f.h) * rcs, on2 = Core.dist({ x: sxr, y: syr }, q) < rr && !q.hidden;
+        c.strokeStyle = on2 ? 'rgba(232,195,90,1)' : 'rgba(232,195,90,.6)'; c.setLineDash([2, 4]); c.lineWidth = on2 ? 3 : 1.6; c.beginPath(); c.arc(sxr, syr, rr * 0.8, 0, TAU); c.stroke(); c.setLineDash([]);
+      }
+    }
+    // the falcon: her shadow on the sand, then her
+    var fxp = f.x, fyp = f.y, fang = f.h, fmode = f.mode, falt = f.alt;
+    if (R.ret) { var u = ease(R.ret.t); fxp = lerp(R.ret.x, Core.GLOVE.x, u); fyp = lerp(R.ret.y, Core.GLOVE.y - 18, u); fang = Math.atan2(Core.GLOVE.y - R.ret.y, Core.GLOVE.x - R.ret.x); fmode = u < 1 ? 'fly' : 'glove'; falt = 30 * (1 - u); }
+    var onGlove = fmode === 'glove', hooded = onGlove && (R.phase === 'intro' || R.phase === 'return') ? 'plain' : null;
+    if (onGlove) { fxp = Core.GLOVE.x; fyp = Core.GLOVE.y - 20; fang = -Math.PI / 2; }
+    var sc = (onGlove ? 1.7 : 1.3) * (1 + falt / 160);
+    if (onGlove && R.phase === 'plan' && !R.draft) {   // where to start: a breathing ring round her, and the way to the quarry
+      var pu = reduced() ? 0.5 : 0.5 + 0.5 * Math.sin(t * 4);
+      c.strokeStyle = 'rgba(255,250,235,' + (0.5 + 0.4 * pu) + ')'; c.lineWidth = 2.5; c.setLineDash([5, 5]); c.beginPath(); c.arc(fxp, fyp, 30 + 6 * pu, 0, TAU); c.stroke();
+      c.globalAlpha = 0.35 + 0.3 * pu; c.beginPath(); c.moveTo(fxp, fyp - 40); c.lineTo(lerp(fxp, q.x, 0.45), lerp(fyp - 40, q.y, 0.45)); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+    }
+    c.fillStyle = 'rgba(40,20,5,' + (0.32 - falt / 500) + ')';
+    c.save(); c.translate(fxp + sh[0] * falt * 0.9, fyp + sh[1] * falt * 0.9); c.rotate(fang); c.scale(1.3, 1.3); c.beginPath(); c.ellipse(0, 0, 9, fmode === 'fly' ? 13 : 4, 0, 0, TAU); c.fill(); c.restore();
+    if (fmode === 'fly' && !R.ret) {   // her height: a gold ring, red until she can stoop
+      c.strokeStyle = falt >= Core.STOOP_MIN ? 'rgba(232,195,90,.95)' : 'rgba(190,60,40,.9)'; c.lineWidth = 2.4;
+      c.beginPath(); c.arc(fxp, fyp, 26 * sc / 1.3, -Math.PI / 2, -Math.PI / 2 + TAU * falt / Core.ALT_MAX); c.stroke();
+    }
+    drawFalconTop(c, fxp, fyp, fang, sc, fmode === 'ground' ? 'glove' : fmode === 'chase' ? 'stoop' : fmode, f.wait ? 0 : still, falt, hooded);
+    if (F.p && F.p.mode !== 'glove') {   // Hurra, the second falcon, with blue jesses
+      var P2 = F.p, ps = 1.15 * (1 + P2.alt / 160);
+      c.fillStyle = 'rgba(40,20,5,.2)'; c.beginPath(); c.ellipse(P2.x + sh[0] * P2.alt * 0.9, P2.y + sh[1] * P2.alt * 0.9, 8, 11, P2.h, 0, TAU); c.fill();
+      drawFalconTop(c, P2.x, P2.y, P2.h, ps, P2.mode === 'stoop' ? 'stoop' : 'fly', still, P2.alt, null);
+      c.strokeStyle = 'rgba(70,140,220,.9)'; c.lineWidth = 2; c.beginPath(); c.arc(P2.x, P2.y, 20 * ps / 1.15, 0, TAU); c.stroke();
+      c.fillStyle = '#fff6e4'; c.font = '700 11px Trebuchet MS, sans-serif'; c.textAlign = 'center'; c.fillText('Hurra', P2.x, P2.y - 24 * ps); c.textAlign = 'left';
+      if (F.t - P2.last < Core.ONE_TWO && P2.last > 0) { c.strokeStyle = 'rgba(232,195,90,.95)'; c.lineWidth = 3; c.beginPath(); c.arc(q.x, q.y, 26, 0, TAU); c.stroke(); }
+    }
+    if (fmode === 'bound') drawHoubaraOrPad(c, f, q, still);
+    // particles
+    for (i = FX.length - 1; i >= 0; i--) {
+      var p = FX[i]; p.life += dt; if (p.life > p.max) { FX.splice(i, 1); continue; }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2; var a = 1 - p.life / p.max;
+      if (p.kind === 'feather') { p.r += dt * 4; c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.fillStyle = 'rgba(205,175,125,' + a + ')'; c.beginPath(); c.ellipse(0, 0, 4 * p.s, 1.4 * p.s, 0, 0, TAU); c.fill(); c.restore(); }
+      else if (p.kind === 'puff') { c.fillStyle = 'rgba(240,215,165,' + a * 0.5 + ')'; c.beginPath(); c.arc(p.x, p.y, 3 + p.life * 8, 0, TAU); c.fill(); }
+      else { c.fillStyle = 'rgba(245,220,170,' + a * 0.8 + ')'; c.beginPath(); c.arc(p.x, p.y, 1.6 * p.s, 0, TAU); c.fill(); }
+    }
+    // screen space: the light of the hour, the shamal's sand, the eye of the stoop
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    var tg = c.createLinearGradient(0, 0, VW, VH); tg.addColorStop(0, L.tint[0]); tg.addColorStop(1, L.tint[1]); c.fillStyle = tg; c.fillRect(0, 0, VW, VH);
+    var W = Core.windAt(F, F.t), soon = Core.gustSoon(F), sand = Math.max(W.g, soon > 0 ? (2 - soon) / 2 * 0.5 : 0);
+    if (sand > 0.02 && R.phase !== 'intro') {
+      var wl = Math.hypot(W.x, W.y) || 1, ux = W.x / wl, uy = W.y / wl, nS = Math.round((reduced() ? 30 : 90) * sand);
+      c.strokeStyle = 'rgba(250,225,175,' + (0.35 * sand + 0.1) + ')'; c.lineWidth = 1.2;
+      for (var m = 0; m < nS; m++) {
+        var seed = (m * 97.13) % 1, ph2 = ((still * (0.6 + seed) + m * 0.137) % 1), px2 = (m * 173.3 % VW), py2 = (m * 91.7 % VH);
+        var ox = px2 + ux * ph2 * VW * 0.7, oy = py2 + uy * ph2 * VW * 0.7; ox = ((ox % VW) + VW) % VW; oy = ((oy % VH) + VH) % VH;
+        c.beginPath(); c.moveTo(ox, oy); c.lineTo(ox - ux * 26 * (0.5 + sand), oy - uy * 26 * (0.5 + sand)); c.stroke();
+      }
+      c.fillStyle = 'rgba(230,190,130,' + 0.18 * sand + ')'; c.fillRect(0, 0, VW, VH);
+    }
+    if (stooping) {
+      var vg = c.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.18, VW / 2, VH / 2, Math.max(VW, VH) * 0.7);
+      vg.addColorStop(0, 'rgba(20,10,0,0)'); vg.addColorStop(1, 'rgba(20,10,0,.55)'); c.fillStyle = vg; c.fillRect(0, 0, VW, VH);
+      if (!reduced()) {
+        c.strokeStyle = 'rgba(255,245,225,.35)'; c.lineWidth = 1.5;
+        for (m = 0; m < 26; m++) { var an = m / 26 * TAU + still * 0.3, r0 = Math.min(VW, VH) * (0.3 + ((still * 2.2 + m * 0.37) % 1) * 0.5); c.beginPath(); c.moveTo(VW / 2 + Math.cos(an) * r0, VH / 2 + Math.sin(an) * r0); c.lineTo(VW / 2 + Math.cos(an) * (r0 + 40), VH / 2 + Math.sin(an) * (r0 + 40)); c.stroke(); }
+      }
+      if (!q.hidden) { var qs = toScreen(q.x, q.y); c.strokeStyle = 'rgba(232,195,90,.9)'; c.lineWidth = 2; c.beginPath(); c.arc(qs.x, qs.y, 22, 0, TAU); c.stroke(); }
+      if (f.mode === 'stoop' && f.steep) { c.fillStyle = 'rgba(255,245,225,.9)'; c.font = '700 22px Georgia, serif'; c.textAlign = 'center'; c.fillText('VERTICAL STOOP', VW / 2, VH * 0.2); c.textAlign = 'left'; }
+    }
+    if (f.mode === 'chase') {
+      c.fillStyle = 'rgba(255,245,225,.92)'; c.font = '700 22px Georgia, serif'; c.textAlign = 'center'; c.fillText('TAIL CHASE · ' + f.chaseT.toFixed(1) + ' s', VW / 2, VH * 0.2); c.textAlign = 'left';
+      if (!reduced()) { c.strokeStyle = 'rgba(255,245,225,.3)'; c.lineWidth = 1.5; for (m = 0; m < 14; m++) { var yy = (m * 53 + still * 600) % VH; c.beginPath(); c.moveTo(0, yy); c.lineTo(VW * 0.25, yy); c.moveTo(VW, yy); c.lineTo(VW * 0.75, yy); c.stroke(); } }
+    }
+    if (flash > 0) { c.fillStyle = 'rgba(255,248,225,' + flash * 0.7 + ')'; c.fillRect(0, 0, VW, VH); flash = Math.max(0, flash - dt * 2.5); }
+    drawWindRose(c, W);
+    if (WIND && R.phase !== 'intro') { level(WIND, 0.02 + (stooping ? 0.22 : 0) + sand * 0.12, stooping ? 900 + (f.s - 150) * 3 : 520); level(ROAR, sand * 0.25 + (stooping ? 0.1 : 0)); }
+  }
+  function drawHoubaraOrPad(c, f, q, t) { if (q.kind === 'l') drawLurePad(c, f.x + 6, f.y + 4, 10, 0); }
+  function drawHare(x, px, py, ang, s, t, running) {   // the Arabian hare from above: sandy back, long black-tipped ears
+    x.save(); x.translate(px, py); x.rotate(ang); x.scale(s, s);
+    var b = running ? Math.sin(t * 18) * 1.5 : 0;
+    x.fillStyle = '#b89468'; x.beginPath(); x.ellipse(-1 + b * 0.3, 0, 9, 5, 0, 0, TAU); x.fill();
+    x.fillStyle = '#a07e55'; x.beginPath(); x.ellipse(6, 0, 4, 3.4, 0, 0, TAU); x.fill();
+    x.fillStyle = '#c9a77a'; x.beginPath(); x.ellipse(4 - b, -3, 5.5, 1.3, -0.25, 0, TAU); x.ellipse(4 - b, 3, 5.5, 1.3, 0.25, 0, TAU); x.fill();
+    x.fillStyle = '#2b1a0c'; x.beginPath(); x.arc(0 - b, -3.6, 0.9, 0, TAU); x.arc(0 - b, 3.6, 0.9, 0, TAU); x.fill();
+    x.fillStyle = '#f3ead8'; x.beginPath(); x.arc(-9, 0, 2.2, 0, TAU); x.fill();
+    x.restore();
+  }
+  function drawPigeons(x, q, t, bound) {   // the flock; the straggler (bird 0) wears a faint ring so you can pick it out
+    q.birds.forEach(function (B, i) {
+      if (bound && i === q.bound) return;
+      var fl = Math.sin(t * 16 + i * 1.7) * 0.5 + 0.5;
+      x.fillStyle = 'rgba(40,20,5,.16)'; x.beginPath(); x.ellipse(B.x + 10, B.y + 12, 5, 3, 0, 0, TAU); x.fill();
+      x.save(); x.translate(B.x, B.y); x.rotate(q.h || 0); x.scale(1.6, 1.6);
+      x.fillStyle = '#8d96a3'; x.beginPath(); x.ellipse(0, 0, 5, 2.4, 0, 0, TAU); x.fill();
+      x.fillStyle = '#6f7885'; x.beginPath(); x.moveTo(1, 0); x.lineTo(-2, -7 - fl * 2); x.lineTo(-4, 0); x.lineTo(-2, 7 + fl * 2); x.closePath(); x.fill();
+      x.fillStyle = '#4c5866'; x.beginPath(); x.arc(4.5, 0, 1.8, 0, TAU); x.fill();
+      x.restore();
+      if (i === 0 && !bound) { x.strokeStyle = 'rgba(255,250,235,.75)'; x.lineWidth = 1.6; x.setLineDash([3, 3]); x.beginPath(); x.arc(B.x, B.y, 17, 0, TAU); x.stroke(); x.setLineDash([]); }
+    });
+  }
+  function drawWindRose(c, W) {   // top right, under the chip: which way the wind blows and how hard
+    var x0 = VW - 46, y0 = 96, wl = Math.hypot(W.x, W.y);
+    c.fillStyle = 'rgba(43,26,12,.7)'; c.beginPath(); c.arc(x0, y0, 26, 0, TAU); c.fill();
+    c.strokeStyle = W.g > 0.2 ? '#f0c060' : '#fff6e4'; c.lineWidth = 3; c.lineCap = 'round';
+    var ln = 6 + Math.min(16, wl / 6), ux = W.x / (wl || 1), uy = W.y / (wl || 1);
+    c.beginPath(); c.moveTo(x0 - ux * ln, y0 - uy * ln); c.lineTo(x0 + ux * ln, y0 + uy * ln); c.stroke();
+    c.beginPath(); c.moveTo(x0 + ux * ln, y0 + uy * ln); c.lineTo(x0 + ux * ln - ux * 7 - uy * 5, y0 + uy * ln - uy * 7 + ux * 5); c.moveTo(x0 + ux * ln, y0 + uy * ln); c.lineTo(x0 + ux * ln - ux * 7 + uy * 5, y0 + uy * ln - uy * 7 - ux * 5); c.stroke();
+    c.fillStyle = '#fff6e4'; c.font = '700 10px system-ui, sans-serif'; c.textAlign = 'center'; c.fillText(W.g > 0.2 ? 'SHAMAL' : 'wind', x0, y0 + 40); c.textAlign = 'start';
+  }
+
+  // ── The First Menu: the dunes alive — the sun, the blowing crests, a falcon waiting on, your bird on her perch ──
+  var DUST = [];
+  function drawTitle(t) {
+    var R = null, act = Math.min(2, Math.floor((nextMission() - 1) / 5)), look = clearedCount() >= 15 ? 'dusk' : ['dawn', 'oasis', 'dusk'][act], W = VW, H = VH, c = ctx, still = reduced() ? 0 : t;
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    var sky = { dawn: ['#2b3f68', '#c4767a', '#f6c486'], oasis: ['#4f8fc0', '#9cc7e2', '#f3dfb0'], dusk: ['#2a1f45', '#a4486a', '#f39a52'] }[look];
+    var hz = H * 0.56, g = c.createLinearGradient(0, 0, 0, hz); c.fillStyle = sky[2]; c.fillRect(0, 0, W, H); g.addColorStop(0, sky[0]); g.addColorStop(0.6, sky[1]); g.addColorStop(1, sky[2]); c.fillStyle = g; c.fillRect(0, 0, W, hz + 2);
+    var sxp = look === 'dusk' ? W * 0.3 : W * 0.7, syp = hz - H * (look === 'oasis' ? 0.32 : 0.05) - (look === 'dawn' ? Math.min(1, still / 30) * H * 0.04 : 0);
+    var sg = c.createRadialGradient(sxp, syp, 0, sxp, syp, H * 0.45); sg.addColorStop(0, 'rgba(255,240,200,.85)'); sg.addColorStop(0.12, 'rgba(255,215,150,.55)'); sg.addColorStop(1, 'rgba(255,200,140,0)'); c.fillStyle = sg; c.fillRect(0, 0, W, hz);
+    c.fillStyle = '#fff3d6'; c.beginPath(); c.arc(sxp, syp, H * 0.045, 0, TAU); c.fill();
+    if (look === 'dusk') { c.fillStyle = 'rgba(255,255,255,.8)'; for (var i = 0; i < 40; i++) { c.fillRect((i * 137.7) % W, (i * 71.3) % (hz * 0.5), 1.4, 1.4); } }
+    // a falcon waiting on, high over the dunes
+    var fa = still * 0.45, fx = W * 0.62 + Math.cos(fa) * W * 0.16, fy = H * 0.2 + Math.sin(fa) * H * 0.06, fl = Math.sin(still * 9) > 0.6 ? 1 : 0;
+    c.save(); c.translate(fx, fy); c.scale(Math.cos(fa) < 0 ? -1 : 1, 1); c.fillStyle = 'rgba(40,25,20,.85)';
+    c.beginPath(); c.moveTo(-14, fl ? -6 : 2); c.quadraticCurveTo(-5, -2, 0, 0); c.quadraticCurveTo(5, -2, 14, fl ? -6 : 2); c.lineTo(5, 2); c.lineTo(0, 4); c.lineTo(-5, 2); c.fill(); c.restore();
+    // the dunes, far to near, with sand blowing off the crests
+    var layers = [[hz - H * 0.02, 0.0035, H * 0.05, look === 'dusk' ? '#8a4a4a' : look === 'oasis' ? '#d6a467' : '#d39070'], [hz + H * 0.06, 0.0028, H * 0.07, look === 'dusk' ? '#a35e48' : '#dca465'], [hz + H * 0.17, 0.0021, H * 0.09, look === 'dusk' ? '#b8743f' : '#e3b768'], [hz + H * 0.31, 0.0016, H * 0.1, look === 'dusk' ? '#c98945' : '#eec27a']];
+    layers.forEach(function (Ly, li) {
+      var crest = function (X) { return Ly[0] + Math.sin(X * Ly[1] + li * 1.7) * Ly[2] + Math.sin(X * Ly[1] * 2.7 + li) * Ly[2] * 0.3; };
+      var lg = c.createLinearGradient(0, Ly[0] - Ly[2], 0, H); lg.addColorStop(0, Ly[3]); lg.addColorStop(1, shade(Ly[3], -0.25));
+      c.fillStyle = lg; c.beginPath(); c.moveTo(0, H); for (var X = 0; X <= W + 8; X += 8) c.lineTo(X, crest(X)); c.lineTo(W, H); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(255,240,210,' + (0.25 + li * 0.08) + ')'; c.lineWidth = 1.5; c.beginPath(); for (X = 0; X <= W + 8; X += 8) c.lineTo(X, crest(X)); c.stroke();
+      if (li === 1 && look === 'oasis') for (var pn = 0; pn < 7; pn++) sidePalm(c, W * (0.08 + pn * 0.13), crest(W * (0.08 + pn * 0.13)) + 4, H * (0.08 + (pn % 3) * 0.02), still + pn);
+      if (li === 1 && look === 'dusk') for (pn = 0; pn < 6; pn++) { var tx = W * (0.15 + pn * 0.14), ty = crest(tx); c.fillStyle = pn % 2 ? '#f3e7cf' : '#9b2d20'; c.beginPath(); c.moveTo(tx - 22, ty + 4); c.lineTo(tx, ty - 22); c.lineTo(tx + 22, ty + 4); c.fill(); c.fillStyle = 'rgba(255,200,90,' + (0.6 + 0.4 * Math.sin(still * 3 + pn)) + ')'; c.beginPath(); c.arc(tx, ty - 26, 2.5, 0, TAU); c.fill(); }
+      if (li >= 2 && !reduced() && Math.random() < 0.5) DUST.push({ x: Math.random() * W, y: crest(Math.random() * W), vx: 30 + Math.random() * 40, vy: -5 - Math.random() * 8, life: 0, max: 1.4 + Math.random() });
+    });
+    for (i = DUST.length - 1; i >= 0; i--) { var d = DUST[i]; d.life += 1 / 60; if (d.life > d.max || DUST.length > 220) { DUST.splice(i, 1); continue; } d.x += d.vx / 60; d.y += d.vy / 60; c.fillStyle = 'rgba(255,235,200,' + (0.5 * (1 - d.life / d.max)) + ')'; c.fillRect(d.x, d.y, 1.6, 1.6); }
+    // ripples on the near dune
+    c.strokeStyle = 'rgba(150,90,40,.18)'; c.lineWidth = 1; for (i = 0; i < 14; i++) { var yy = H * 0.86 + i * H * 0.012; c.beginPath(); for (var X = 0; X <= W; X += 10) c.lineTo(X, yy + Math.sin(X * 0.03 + i) * 3); c.stroke(); }
+    // the wakr: your falcon on her perch, hooded, bells on her legs
+    var px = W > 700 ? W * 0.8 : W * 0.78, py = H * 0.8, s = Math.max(1.6, Math.min(W, H) / 180);
+    c.fillStyle = '#5a3a1e'; c.fillRect(px - 3 * s, py, 6 * s, H - py); c.fillStyle = '#8a5a30'; c.beginPath(); c.ellipse(px, py, 14 * s, 4 * s, 0, 0, TAU); c.fill();
+    c.fillStyle = 'rgba(40,20,5,.25)'; c.beginPath(); c.ellipse(px + 30 * s, H - 6, 40 * s, 6 * s, 0, 0, TAU); c.fill();
+    drawGloveFalcon(c, px, py - 23 * s, s, 'plain', still);
+    drawDallah(c, px - 34 * s, H - 14 * s, 10 * s);
+    var tg = c.createLinearGradient(0, 0, W, 0); tg.addColorStop(0, 'rgba(20,10,0,.35)'); tg.addColorStop(0.5, 'rgba(20,10,0,0)'); c.fillStyle = tg; c.fillRect(0, 0, W, H);
+  }
+  function sidePalm(c, x, y, h, t) {
+    c.save(); c.strokeStyle = '#4a3218'; c.lineWidth = Math.max(2, h * 0.07); c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + h * 0.08, y - h * 0.5, x + h * 0.05, y - h); c.stroke();
+    var sw = reduced() ? 0 : Math.sin(t * 1.1) * 0.08;
+    c.strokeStyle = '#2f5222'; c.lineWidth = Math.max(1.5, h * 0.05);
+    for (var i = 0; i < 7; i++) { var a = -Math.PI / 2 + (i - 3) * 0.5 + sw; c.beginPath(); c.moveTo(x + h * 0.05, y - h); c.quadraticCurveTo(x + h * 0.05 + Math.cos(a) * h * 0.4, y - h + Math.sin(a) * h * 0.25 - h * 0.08, x + h * 0.05 + Math.cos(a) * h * 0.55, y - h + Math.sin(a) * h * 0.4 + h * 0.15); c.stroke(); }
+    c.restore();
+  }
+  function shade(hex, k) { var n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; var f = function (v) { return Math.round(clamp(v * (1 + k), 0, 255)); }; return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')'; }
+  function drawHow(dt) {
+    howT += dt;
+    var hc = $('howCv'), r = hc.getBoundingClientRect(); if (!r.width) return;
+    var d = Math.min(2, devicePixelRatio || 1); if (hc.width !== Math.round(r.width * d)) { hc.width = Math.round(r.width * d); hc.height = Math.round(r.height * d); }
+    var x = hc.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); howPreview(x, r.width, r.height, reduced() ? 1.2 : howT);
+  }
+
+  // ══ The loop ═══════════════════════════════════════════════════════════════════════════════════════════════
+  var PERF = { n: 0, i: 0, ft: new Float32Array(1024), fw: new Float32Array(1024) };
+  var lastT = performance.now(), frameErr = 0;
+  function frame(now) {
+    var dt = Math.min(0.05, Math.max(0, (now - lastT) / 1000)), t = now / 1000, t0 = performance.now();
+    PERF.ft[PERF.i] = now - lastT; lastT = now;
+    try {
+      if (RUN && (SCENE === 'play' || SCENE === 'pause' || (SCENE === 'how' && RUN.howFromPause))) { tick(dt); if (RUN) drawPlay(dt, t); }
+      else { drawTitle(t); if (WIND) { level(WIND, 0.012, 450); level(ROAR, 0); } }
+      if (SCENE === 'how') drawHow(dt);
+    } catch (err) { if (DEVHOST && window.console && !frameErr) { frameErr = 1; console.error('falcon frame', err && err.stack || err); } }
+    PERF.fw[PERF.i] = performance.now() - t0; PERF.i = (PERF.i + 1) & 1023; PERF.n++;
+    requestAnimationFrame(frame);
+  }
+  function pct(arr, n, q) { var a = Array.prototype.slice.call(arr, 0, Math.min(n, 1024)).sort(function (x, y) { return x - y; }); return a.length ? +a[Math.min(a.length - 1, Math.floor(q * a.length))].toFixed(2) : 0; }
+  function series(arr) { var n = Math.min(PERF.n, 1024); return { frames: n, p50: pct(arr, n, 0.5), p95: pct(arr, n, 0.95), worst: pct(arr, n, 1) }; }
+
+  // ══ Page hooks: the game's state and frame timings, read-only ════════════════════════════════════════════════
+  var HOOK = window['__' + GAME_ID] = {
+    state: function () {
+      var R = RUN, F = R && R.F;
+      return { screen: SCENE, mission: R ? R.n : null, kind: R ? R.kind : null, phase: R ? R.phase : null, flight: R ? R.k + 1 : null, caught: caught(), need: R ? R.spec.need : null, res: R ? R.res.slice() : [],
+        deaths: R ? R.deaths : 0, t: R ? Math.round(R.t * 10) / 10 : 0, score: R ? caught() * 100 : 0,
+        falcon: F ? { x: Math.round(F.f.x), y: Math.round(F.f.y), alt: Math.round(F.f.alt * 10) / 10, mode: F.f.mode, speed: Math.round(F.f.s), path: F.path.length } : null,
+        quarry: F ? { kind: F.q.kind, x: Math.round(F.q.x), y: Math.round(F.q.y), hidden: !!F.q.hidden, run: !!F.q.run } : null,
+        wind: F ? Core.windAt(F, F.t) : null, flightT: F ? Math.round(F.t * 10) / 10 : 0, limit: F ? F.limit : null,
+        feathers: Object.keys(SV.feathers).length, cleared: clearedCount(), cam: Math.round(CAM.z * 100) / 100,
+        // advanced (2026-10-29)
+        stars: JSON.parse(JSON.stringify(SV.stars)), starTotal: starTotal(), rank: rank(), tech: R ? JSON.parse(JSON.stringify(R.tech)) : null, starsNow: R ? R.stars | 0 : 0,
+        steep: !!(F && F.f.steep), chaseT: F ? Math.round(F.f.chaseT * 100) / 100 : 0, stamina: F && F.stam != null ? Math.round(F.stam) : null, inThermal: !!(F && F.f.inTh), thermals: F ? F.thermals.length : 0, thermalRides: F ? F.thRides : 0,
+        habit: F ? Core.habitOf(F.hab) : null, hab: R ? JSON.parse(JSON.stringify(R.hab)) : null, strike: F && F.strike ? JSON.parse(JSON.stringify(F.strike)) : null,
+        partner: F && F.p ? { mode: F.p.mode, alt: Math.round(F.p.alt), last: Math.round(F.p.last * 10) / 10 } : null, birds: F && F.q.birds ? F.q.birds.length : 0, doubled: !!(F && F.q.doubled),
+        drill: R && R.drill ? { kind: R.drill, tries: R.dTry, ok: R.dOk } : null, drills: JSON.parse(JSON.stringify(SV.drills)), techOpen: R ? R.spec.tech : null };
+    },
+    scene: function () { return SCENE; },
+    perf: function () { return { frame: series(PERF.ft), work: series(PERF.fw) }; },
+    perfReset: function () { PERF.n = 0; PERF.i = 0; },
+  };
+  // ══ Boot ═══════════════════════════════════════════════════════════════════════════════════════════════════
+  if (TOUCH) { Array.prototype.forEach.call(document.querySelectorAll('.keys-only'), function (e) { e.style.display = 'none'; }); Array.prototype.forEach.call(document.querySelectorAll('.touch-only'), function (e) { e.style.display = ''; }); }
+  document.body.classList.toggle('rm', SV.settings.motion === 'reduced');
+  fit();
+  setScene('title');
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
